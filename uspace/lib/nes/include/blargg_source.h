@@ -16,7 +16,7 @@
 // module. A failed requirement indicates a bug outside the module.
 // void require( bool expr );
 #undef require
-#define require( expr ) {}
+#define require( expr ) assert(expr)
 //assert(( "unmet requirement", expr ))
 
 // Like printf() except output goes to debug log file. Might be defined to do
