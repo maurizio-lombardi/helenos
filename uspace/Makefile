@@ -256,7 +256,8 @@ LIBS = \
 	lib/bithenge \
 	lib/posix \
 	lib/ieee80211 \
-	lib/virtio
+	lib/virtio \
+	lib/nes
 
 BASE_BUILDS := $(addsuffix .build,$(BASE_LIBS))
 BUILDS := $(addsuffix .build,$(DIRS) $(LIBS))
