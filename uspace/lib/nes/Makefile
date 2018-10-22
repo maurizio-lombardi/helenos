@@ -28,15 +28,20 @@
 
 USPACE_PREFIX = ../..
 LIBRARY = libnes
+EXTRA_CXXFLAGS = -Iinclude/audio -Iinclude/mappers -Iinclude
 
 SOURCES = \
-	apu_snapshot.cpp \
-	Blip_Buffer.cpp \
-	Multi_Buffer.cpp \
-	Nes_Apu.cpp \
-	Nes_Namco.cpp \
-	Nes_Oscs.cpp \
-	Nes_Vrc6.cpp \
-	Nonlinear_Buffer.cpp
+	audio/apu_snapshot.cpp \
+	audio/Blip_Buffer.cpp \
+	audio/Multi_Buffer.cpp \
+	audio/Nes_Apu.cpp \
+	audio/Nes_Namco.cpp \
+	audio/Nes_Oscs.cpp \
+	audio/Nes_Vrc6.cpp \
+	audio/Nonlinear_Buffer.cpp \
+	mappers/mapper1.cpp \
+	mappers/mapper2.cpp \
+	mappers/mapper3.cpp \
+	mappers/mapper4.cpp
 
 include $(USPACE_PREFIX)/Makefile.common
