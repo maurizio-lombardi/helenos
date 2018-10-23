@@ -32,7 +32,7 @@ static errno_t sound_thread(void *argc)
 	while (1) {
 		fibril_mutex_lock(&ctx->buffer_lock);
 
-		if (ctx->nents == 0)
+		while (ctx->nents == 0)
 			fibril_condvar_wait(&ctx->buffer_cv, &ctx->buffer_lock);
 
 		while (ctx->nents > 0) {
