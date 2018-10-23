@@ -28,7 +28,9 @@
 
 USPACE_PREFIX = ../..
 LIBRARY = libnes
+LIBS = hound pcm
 EXTRA_CXXFLAGS = -Iinclude/audio -Iinclude/mappers -Iinclude
+EXTRA_CFLAGS = -Iinclude/audio
 
 SOURCES = \
 	audio/apu_snapshot.cpp \
@@ -39,6 +41,8 @@ SOURCES = \
 	audio/Nes_Oscs.cpp \
 	audio/Nes_Vrc6.cpp \
 	audio/Nonlinear_Buffer.cpp \
+	audio/Sound_Queue.cpp \
+	audio/Sound_Queue_wrap.c \
 	mappers/mapper1.cpp \
 	mappers/mapper2.cpp \
 	mappers/mapper3.cpp \
