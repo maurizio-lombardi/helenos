@@ -2,11 +2,11 @@
 // Blip_Buffer 0.3.3. http://www.slack.net/~ant/libs/
 
 #include "Blip_Buffer.h"
+#include "math_wrap.h"
 
-#include <str.h>
-#include <math.h>
+#include <cstring>
+#include <cstdlib>
 
-using namespace std::hel;
 
 /* Copyright (C) 2003-2005 Shay Green. This module is free software; you
 can redistribute it and/or modify it under the terms of the GNU Lesser
@@ -86,7 +86,7 @@ blargg_err_t Blip_Buffer::sample_rate( long new_rate, int msec )
 void Blip_Buffer::clock_rate( long cps )
 {
 	clocks_per_sec = cps;
-	factor_ = (unsigned long) floor( (double) samples_per_sec / cps *
+	factor_ = (unsigned long) nes_floor( (double) samples_per_sec / cps *
 			(1L << BLIP_BUFFER_ACCURACY) + 0.5 );
 	require( factor_ > 0 ); // clock_rate/sample_rate ratio is too large
 }
@@ -103,7 +103,7 @@ void Blip_Buffer::bass_freq( int freq )
 		bass_shift = 31; // 32 or greater invokes undefined behavior elsewhere
 		return;
 	}
-	bass_shift = 1 + (int) floor( 1.442695041 * log( 0.124 * samples_per_sec / freq ) );
+	bass_shift = 1 + (int) nes_floor( 1.442695041 * nes_log( 0.124 * samples_per_sec / freq ) );
 	if ( bass_shift < 0 )
 		bass_shift = 0;
 	if ( bass_shift > 24 )
@@ -197,7 +197,7 @@ void Blip_Impulse_::volume_unit( double new_unit )
 	
 	volume_unit_ = new_unit;
 	
-	offset = 0x10001 * (unsigned long) floor( volume_unit_ * 0x10000 + 0.5 );
+	offset = 0x10001 * (unsigned long) nes_floor( volume_unit_ * 0x10000 + 0.5 );
 	
 	if ( fine_bits )
 		fine_volume_unit();
@@ -216,7 +216,7 @@ void Blip_Impulse_::treble_eq( const blip_eq_t& new_eq )
 	generate = false;
 	eq = new_eq;
 	
-	double treble = pow( 10.0, 1.0 / 20 * eq.treble ); // dB (-6dB = 0.50)
+	double treble = nes_pow( 10.0, 1.0 / 20 * eq.treble ); // dB (-6dB = 0.50)
 	if ( treble < 0.000005 )
 		treble = 0.000005;
 	
@@ -234,11 +234,11 @@ void Blip_Impulse_::treble_eq( const blip_eq_t& new_eq )
 	
 	// reduce adjacent impulse interference by using small part of wide impulse
 	const double n_harm = 4096;
-	const double rolloff = pow( treble, 1.0 / (n_harm * pt - n_harm * cutoff) );
-	const double rescale = 1.0 / pow( rolloff, n_harm * cutoff );
+	const double rolloff = nes_pow( treble, 1.0 / (n_harm * pt - n_harm * cutoff) );
+	const double rescale = 1.0 / nes_pow( rolloff, n_harm * cutoff );
 	
-	const double pow_a_n = rescale * pow( rolloff, n_harm );
-	const double pow_a_nc = rescale * pow( rolloff, n_harm * cutoff );
+	const double pow_a_n = rescale * nes_pow( rolloff, n_harm );
+	const double pow_a_nc = rescale * nes_pow( rolloff, n_harm * cutoff );
 	
 	double total = 0.0;
 	const double to_angle = pi / 2 / n_harm / max_res;
@@ -254,16 +254,16 @@ void Blip_Impulse_::treble_eq( const blip_eq_t& new_eq )
 		//y -= rescale * dsf( angle, n_harm * cutoff, rolloff );
 		//y += rescale * dsf( angle, n_harm,          rolloff );
 		
-		const double cos_angle = cos( angle );
-		const double cos_nc_angle = cos( n_harm * cutoff * angle );
-		const double cos_nc1_angle = cos( (n_harm * cutoff - 1.0) * angle );
+		const double cos_angle = nes_cos( angle );
+		const double cos_nc_angle = nes_cos( n_harm * cutoff * angle );
+		const double cos_nc1_angle = nes_cos( (n_harm * cutoff - 1.0) * angle );
 		
 		double b = 2.0 - 2.0 * cos_angle;
 		double a = 1.0 - cos_angle - cos_nc_angle + cos_nc1_angle;
 		
 		double d = 1.0 + rolloff * (rolloff - 2.0 * cos_angle);
-		double c = pow_a_n * rolloff * cos( (n_harm - 1.0) * angle ) -
-				pow_a_n * cos( n_harm * angle ) -
+		double c = pow_a_n * rolloff * nes_cos( (n_harm - 1.0) * angle ) -
+				pow_a_n * nes_cos( n_harm * angle ) -
 				pow_a_nc * rolloff * cos_nc1_angle +
 				pow_a_nc * cos_nc_angle;
 		
@@ -272,7 +272,7 @@ void Blip_Impulse_::treble_eq( const blip_eq_t& new_eq )
 		
 		// fixed window which affects wider impulses more
 		if ( width > 12 ) {
-			double window = cos( n_harm / 1.25 / Blip_Buffer::widest_impulse_ * angle );
+			double window = nes_cos( n_harm / 1.25 / Blip_Buffer::widest_impulse_ * angle );
 			y *= window * window;
 		}
 		
@@ -298,7 +298,7 @@ void Blip_Impulse_::treble_eq( const blip_eq_t& new_eq )
 				if ( index < size )
 					sum += buf [index];
 			}
-			*imp++ = (imp_t) floor( sum * factor + (impulse_offset + 0.5) );
+			*imp++ = (imp_t) nes_floor( sum * factor + (impulse_offset + 0.5) );
 		}
 	}
 	

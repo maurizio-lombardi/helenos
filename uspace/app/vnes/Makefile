@@ -27,26 +27,17 @@
 #
 
 USPACE_PREFIX = ../..
-LIBRARY = libnes
-LIBS = hound pcm math
-EXTRA_CXXFLAGS = -Iinclude/audio -Iinclude/mappers -Iinclude
-EXTRA_CFLAGS = -Iinclude/audio
+LIBS = nes
+BINARY = vnes
+
+EXTRA_CXXFLAGS = -Iinclude
 
 SOURCES = \
-	audio/apu_snapshot.cpp \
-	audio/Blip_Buffer.cpp \
-	audio/Multi_Buffer.cpp \
-	audio/Nes_Apu.cpp \
-	audio/Nes_Namco.cpp \
-	audio/Nes_Oscs.cpp \
-	audio/Nes_Vrc6.cpp \
-	audio/Nonlinear_Buffer.cpp \
-	audio/Sound_Queue.cpp \
-	audio/Sound_Queue_wrap.c \
-	audio/math_wrap.c \
-	mappers/mapper1.cpp \
-	mappers/mapper2.cpp \
-	mappers/mapper3.cpp \
-	mappers/mapper4.cpp
+	main.cpp \
+	apu.cpp \
+	mapper.cpp \
+	cartridge.cpp \
+	ppu.cpp
+
 
 include $(USPACE_PREFIX)/Makefile.common

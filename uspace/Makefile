@@ -99,6 +99,7 @@ DIRS = \
 	app/wavplay \
 	app/websrv \
 	app/wifi_supplicant \
+	app/vnes \
 	srv/audio/hound \
 	srv/clipboard \
 	srv/locsrv \
