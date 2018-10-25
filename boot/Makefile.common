@@ -222,7 +222,8 @@ RD_APPS_NON_ESSENTIAL = \
 	viewer \
 	df \
 	fontviewer \
-	wifi_supplicant
+	wifi_supplicant \
+	vnes
 
 ifeq ($(CONFIG_BUILD_SHARED_LIBS), y)
 	RD_APPS_NON_ESSENTIAL += dltest dltests

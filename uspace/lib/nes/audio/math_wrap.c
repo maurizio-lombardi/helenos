@@ -8,7 +8,7 @@ double nes_floor(double x)
 
 double nes_pow(double base, double exponent)
 {
-	return 0;//pow(base, exponent);
+	return 0;//FIXME: pow(base, exponent);
 }
 
 double nes_log(double x)
@@ -18,6 +18,6 @@ double nes_log(double x)
 
 double nes_cos(double x)
 {
-	return 0;//cos(x);
+	return cos(x);
 }
 

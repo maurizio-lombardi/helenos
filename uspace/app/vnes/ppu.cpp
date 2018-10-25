@@ -2,6 +2,7 @@
 #include "cpu.hpp"
 //#include "gui.hpp"
 #include "ppu.hpp"
+#include "new_frame.h"
 #include <cstring>
 
 namespace PPU {
@@ -270,7 +271,7 @@ template<Scanline s> void scanline_cycle()
     static u16 addr;
 
     if (s == NMI and dot == 1) { status.vBlank = true; if (ctrl.nmi) CPU::set_nmi(); }
-    else if (s == POST and dot == 0) {} /*FIXME:  GUI::new_frame(pixels); */
+    else if (s == POST and dot == 0) {new_frame(pixels);}
     else if (s == VISIBLE or s == PRE)
     {
         // Sprites:
