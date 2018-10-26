@@ -81,6 +81,7 @@ GENERIC_SOURCES = \
 	generic/smp_memory_barrier.c \
 	generic/task.c \
 	generic/imath.c \
+	generic/math.c \
 	generic/inet/addr.c \
 	generic/inet/endpoint.c \
 	generic/inet/host.c \
