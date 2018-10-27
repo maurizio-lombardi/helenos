@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 	}
 	joypad_init();
 	sig_connect(&canvas->keyboard_event, NULL, on_keyboard_event);
-	window_resize(main_window, 0, 0, WINDOW_WIDTH + 8, WINDOW_HEIGHT + 8, WINDOW_PLACEMENT_CENTER);
+	window_resize(main_window, 0, 0, WINDOW_WIDTH + 8, WINDOW_HEIGHT + 28, WINDOW_PLACEMENT_CENTER);
 
 	pixels = (uint32_t *)surface_direct_access(surface);
 
