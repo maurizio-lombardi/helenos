@@ -42,13 +42,11 @@ int main(int argc, char **argv)
 	}
 
 	printf("Loading image %s... ", argv[2]);
-	fflush(stdout);
 	if (cartridge_load_file(argv[2])) {
 		printf("\n%s: cannot find a valid NES game image\n", NAME);
 		return 1;
 	}
 	printf("Image loading completed\n");
-	fflush(stdout);
 
 	window_t *main_window = window_open(argv[1], NULL,
 	    WINDOW_MAIN | WINDOW_DECORATED, NAME);
