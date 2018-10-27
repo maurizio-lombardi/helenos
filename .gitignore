@@ -224,6 +224,7 @@ uspace/dist/app/vuh
 uspace/dist/app/wavplay
 uspace/dist/app/websrv
 uspace/dist/app/wifi_supplicant
+uspace/dist/app/vnes
 uspace/dist/demo.txt
 uspace/dist/demo.wav
 uspace/dist/demo.xm

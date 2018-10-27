@@ -1,5 +1,5 @@
 #include <cpu.hpp>
-#include <audio/Sound_Queue.h>
+#include <Sound_Queue.h>
 #include <cartridge.hpp>
 #include <apu.hpp>
 #include "cppwrap.h"

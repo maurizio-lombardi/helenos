@@ -1,8 +1,8 @@
 #include "cpu.hpp"
 #include "apu.hpp"
 
-#include <audio/Blip_Buffer.h>
-#include <audio/Nes_Apu.h>
+#include <Blip_Buffer.h>
+#include <Nes_Apu.h>
 
 void* __dso_handle;
 
