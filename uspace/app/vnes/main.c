@@ -5,10 +5,9 @@
 #include <errno.h>
 #include <task.h>
 #include <str.h>
-
-#include "cpu_wrap.h"
 #include "joypad.h"
-#include "new_frame.h"
+#include "cppwrap.h"
+#include "cwrap.h"
 
 #define NAME "vnes"
 
@@ -21,6 +20,8 @@ canvas_t *canvas;
 surface_t *surface;
 uint32_t *pixels;
 
+extern int pause;
+
 static void frame_timer_cb(void *data);
 
 static void usage(void) {
@@ -30,7 +31,7 @@ static void usage(void) {
 static void on_keyboard_event(widget_t *widget, void *data)
 {
 	kbd_event_t *event = (kbd_event_t *) data;
-	joypad_keyboard_event(event->c, event->type == KEY_PRESS);
+	joypad_keyboard_event(event->key, event->type == KEY_PRESS);
 }
 
 int main(int argc, char **argv)
@@ -39,6 +40,15 @@ int main(int argc, char **argv)
 		usage();
 		return 1;
 	}
+
+	printf("Loading image %s... ", argv[2]);
+	fflush(stdout);
+	if (cartridge_load_file(argv[2])) {
+		printf("\n%s: cannot find a valid NES game image\n", NAME);
+		return 1;
+	}
+	printf("Image loading completed\n");
+	fflush(stdout);
 
 	window_t *main_window = window_open(argv[1], NULL,
 	    WINDOW_MAIN | WINDOW_DECORATED, NAME);
@@ -61,8 +71,9 @@ int main(int argc, char **argv)
 		printf("%s: Cannot create the canvas\n", NAME);
 		return 4;
 	}
+	joypad_init();
 	sig_connect(&canvas->keyboard_event, NULL, on_keyboard_event);
-	window_resize(main_window, 0, 0, WINDOW_WIDTH + 8, WINDOW_HEIGHT + 28, WINDOW_PLACEMENT_CENTER);
+	window_resize(main_window, 0, 0, WINDOW_WIDTH + 8, WINDOW_HEIGHT + 8, WINDOW_PLACEMENT_CENTER);
 
 	pixels = (uint32_t *)surface_direct_access(surface);
 
@@ -83,10 +94,11 @@ static void frame_timer_cb(void *data)
 	const int delay = 1000000 / FPS;
 
 	getuptime(&prev);
-	update_canvas(canvas, surface);
+	if (!pause) {
+		update_canvas(canvas, surface);
+		cpu_run_frame();
+	}
 	getuptime(&cur);
-
-	cpu_run_frame();
 
 	us = NSEC2USEC(ts_sub_diff(&cur, &prev));
 
