@@ -5,10 +5,14 @@ static unsigned char joypad_bits[2];  // Joypad shift registers.
 static int strobe;        // Joypad strobe latch.
 static int A, B, SEL, START, UP, DOWN, LEFT, RIGHT;
 
+int pause;
+
 void joypad_init(void)
 {
 	A = B = SEL = START = 0;
 	UP = DOWN = LEFT = RIGHT = 0;
+
+	pause = 0;
 }
 
 unsigned char joypad_state_get(int n)
@@ -53,16 +57,19 @@ void joypad_write_strobe(int v)
     strobe = v;
 }
 
-void joypad_keyboard_event(wchar_t c, int press)
+void joypad_keyboard_event(int c, int press)
 {
 	switch (c) {
-	case 'a':
+	case KC_A:
 		A = press;
 		break;
-	case 's':
+	case KC_S:
 		B = press;
 		break;
-	case 'b':
+	case KC_ENTER:
+		START = press;
+		break;
+	case KC_B:
 		SEL = press;
 		break;
 	case KC_UP:
@@ -76,6 +83,10 @@ void joypad_keyboard_event(wchar_t c, int press)
 		break;
 	case KC_RIGHT:
 		RIGHT = press;
+		break;
+	case KC_P:
+		if (press)
+			pause = !pause;
 		break;
 	}
 }

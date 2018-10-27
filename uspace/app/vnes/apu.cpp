@@ -1,9 +1,8 @@
-//#include "gui.hpp"
-//#include "cpu.hpp"
+#include "cpu.hpp"
 #include "apu.hpp"
 
-#include <audio/Blip_Buffer.h>
-#include <audio/Nes_Apu.h>
+#include <Blip_Buffer.h>
+#include <Nes_Apu.h>
 
 void* __dso_handle;
 
@@ -22,7 +21,7 @@ void init()
     buf.clock_rate(1789773);
 
     apu.output(&buf);
-    //FIXME: apu.dmc_reader(CPU::dmc_read);
+    apu.dmc_reader(CPU::dmc_read);
 }
 
 void reset()
@@ -48,7 +47,7 @@ void run_frame(int elapsed)
     buf.end_frame(elapsed);
 
     if (buf.samples_avail() >= OUT_SIZE) {}
-        //FIXME: GUI::new_samples(outBuf, buf.read_samples(outBuf, OUT_SIZE));
+        //FIXME: sound_new_samples(outBuf, buf.read_samples(outBuf, OUT_SIZE));
 }
 
 

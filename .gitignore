@@ -154,6 +154,7 @@ uspace/app/vuhid/vuh
 uspace/app/wavplay/wavplay
 uspace/app/websrv/websrv
 uspace/app/wifi_supplicant/wifi_supplicant
+uspace/app/vnes/vnes
 uspace/dist/app/
 uspace/dist/app/barber
 uspace/dist/app/bdsh
@@ -224,6 +225,7 @@ uspace/dist/app/vuh
 uspace/dist/app/wavplay
 uspace/dist/app/websrv
 uspace/dist/app/wifi_supplicant
+uspace/dist/app/vnes
 uspace/dist/demo.txt
 uspace/dist/demo.wav
 uspace/dist/demo.xm

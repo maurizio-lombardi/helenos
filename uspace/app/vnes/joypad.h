@@ -11,7 +11,7 @@ void joypad_init(void);
 unsigned char joypad_read_state(int n);
 void joypad_write_strobe(int v);
 unsigned char joypad_state_get(int n);
-void joypad_keyboard_event(wchar_t c, int press);
+void joypad_keyboard_event(int c, int press);
 
 #ifdef __cplusplus
 }

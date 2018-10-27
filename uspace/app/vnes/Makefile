@@ -30,6 +30,7 @@ USPACE_PREFIX = ../..
 LIBS = nes math gui draw softrend
 BINARY = vnes
 
+EXTRA_CFLAGS = -Iinclude
 EXTRA_CXXFLAGS = -Iinclude
 
 SOURCES = \
@@ -40,7 +41,11 @@ SOURCES = \
 	joypad.c \
 	ppu.cpp \
 	cpu.cpp \
-	cpu_wrap.cpp
+	cppwrap.cpp \
+	mappers/mapper1.cpp \
+	mappers/mapper2.cpp \
+	mappers/mapper3.cpp \
+	mappers/mapper4.cpp
 
 
 include $(USPACE_PREFIX)/Makefile.common

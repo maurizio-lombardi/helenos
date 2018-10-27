@@ -1,15 +1,14 @@
-#ifndef _CPU_WRAP_H_
-#define _CPU_WRAP_H_
+#ifndef _CWRAPPER_H_
+#define _CWRAPPER_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void cpu_run_frame(void);
+void new_frame(uint32_t *frame);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

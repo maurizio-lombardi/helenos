@@ -1,6 +1,6 @@
 #include <cstdio>
 #include "apu.hpp"
-//#include "cpu.hpp"
+#include "cpu.hpp"
 #include "mappers/mapper0.hpp"
 #include "mappers/mapper1.hpp"
 #include "mappers/mapper2.hpp"
@@ -36,16 +36,29 @@ void signal_scanline()
 }
 
 /* Load the ROM from a file. */
-void load(const char* fileName)
+int load(const char* fileName)
 {
+    long r = 0;
     FILE* f = fopen(fileName, "rb");
 
+    if (!f)
+        return -1;
+
     fseek(f, 0, SEEK_END);
-    int size = ftell(f);
+    long size = ftell(f);
     fseek(f, 0, SEEK_SET);
 
+    printf("Image size = %ld bytes\n", size);
+
     u8* rom = new u8[size];
-    fread(rom, size, 1, f);
+    if (!rom)
+       return -2;
+    while (r < size) {
+	if (size - r > 128)
+           r += fread(&rom[r], 1, 128, f);
+	else
+           r += fread(&rom[r], 1, size - r, f);
+    } 
     fclose(f);
 
     int mapperNum = (rom[7] & 0xF0) | (rom[6] >> 4);
@@ -57,11 +70,16 @@ void load(const char* fileName)
         case 2:  mapper = new Mapper2(rom); break;
         case 3:  mapper = new Mapper3(rom); break;
         case 4:  mapper = new Mapper4(rom); break;
+	default:
+            /*FIXME: delete mapper*/
+            delete rom;
+            return -3;
     }
 
-    //FIXME: CPU::power();
+    CPU::power();
     PPU::reset();
-    APU::reset();
+    //APU::reset();
+    return 0;
 }
 
 bool loaded()

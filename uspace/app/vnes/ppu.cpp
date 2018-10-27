@@ -2,7 +2,7 @@
 #include "cpu.hpp"
 //#include "gui.hpp"
 #include "ppu.hpp"
-#include "new_frame.h"
+#include "cwrap.h"
 #include <cstring>
 
 namespace PPU {
@@ -257,7 +257,7 @@ void pixel()
         // Evaluate priority:
         if (objPalette && (palette == 0 || objPriority == 0)) palette = objPalette;
 
-        pixels[scanline*256 + x] = nesRgb[rd(0x3F00 + (rendering() ? palette : 0))];
+        pixels[scanline*256 + x] = nesRgb[rd(0x3F00 + (rendering() ? palette : 0))] | 0xFF000000;
     }
     // Perform background shifts:
     bgShiftL <<= 1; bgShiftH <<= 1;
