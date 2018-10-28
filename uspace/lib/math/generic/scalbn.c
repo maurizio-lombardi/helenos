@@ -47,14 +47,14 @@ double scalbn(double x, int n)
 	double_t y = x;
 
 	if (n > 1023) {
-	y *= 0x1p1023;
- 	n -= 1023;
-	if (n > 1023) {
 		y *= 0x1p1023;
-		n -= 1023;
-		if (n > 1023)
-			n = 1023;
-	}
+ 		n -= 1023;
+		if (n > 1023) {
+			y *= 0x1p1023;
+			n -= 1023;
+			if (n > 1023)
+				n = 1023;
+		}
 	} else if (n < -1022) {
         /* make sure final n < -53 to avoid double
            rounding in the subnormal range */
