@@ -20,6 +20,8 @@ canvas_t *canvas;
 surface_t *surface;
 uint32_t *pixels;
 
+static int need_refresh = 0;
+
 extern int pause;
 
 static void frame_timer_cb(void *data);
@@ -93,7 +95,10 @@ static void frame_timer_cb(void *data)
 
 	getuptime(&prev);
 	if (!pause) {
-		update_canvas(canvas, surface);
+		if (need_refresh) {
+			update_canvas(canvas, surface);
+			need_refresh = 0;
+		}
 		cpu_run_frame();
 	}
 	getuptime(&cur);
@@ -108,6 +113,11 @@ static void frame_timer_cb(void *data)
 
 void new_frame(uint32_t *frame)
 {
-	memcpy(pixels, frame, WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t));
+	size_t nbytes = WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t);
+	if (memcmp(pixels, frame, nbytes) != 0) {
+		memcpy(pixels, frame, WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t));
+		need_refresh = 1;
+	} else
+		need_refresh = 0;
 }
 
