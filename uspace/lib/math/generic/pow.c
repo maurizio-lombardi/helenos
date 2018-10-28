@@ -26,11 +26,10 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** @addtogroup libc
+/** @addtogroup libmath
  * @{
  */
-/**
- * @file Mathematical functions
+/** @file pow mathematical function
  */
 
 #include <errno.h>
@@ -38,7 +37,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "math_private.h"
+#include "internal.h"
 
 static const double
 bp[] = {1.0, 1.5,},
