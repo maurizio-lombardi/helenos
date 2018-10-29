@@ -30,6 +30,7 @@
 #define LIBCPP_BITS_TYPE_INFO
 
 #include <cstdlib>
+#include <__bits/exception.hpp>
 
 namespace std
 {
@@ -54,7 +55,22 @@ namespace std
             const char* __name;
     };
 
-    // TODO: class bad_cast, bad_typeid
+    class bad_cast : public exception
+    {
+        public:
+            bad_cast() noexcept { }
+            virtual ~bad_cast() noexcept;
+            virtual const char* what() const noexcept;
+    };
+
+    class bad_typeid : public exception
+    {
+        public:
+            bad_typeid() noexcept { }
+            virtual ~bad_typeid() noexcept;
+            virtual const char* what() const noexcept;
+    };
+
 }
 
 #endif
