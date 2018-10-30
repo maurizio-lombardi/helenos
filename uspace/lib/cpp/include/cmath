@@ -25,5 +25,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef LIBCPP_CMATH
+#define LIBCPP_CMATH
 
-#error "<cmath> is not implemented"
+namespace std::hel
+{
+    extern "C" {
+        #include <math.h>
+    }
+}
+
+namespace std
+{
+    using std::hel::cos;
+    using std::hel::sin;
+    using std::hel::pow;
+    using std::hel::log;
+}
+
+using std::hel::cos;
+using std::hel::sin;
+using std::hel::pow;
+using std::hel::log;
+
+#endif
