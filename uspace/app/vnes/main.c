@@ -20,6 +20,8 @@ canvas_t *canvas;
 surface_t *surface;
 uint32_t *pixels;
 
+unsigned long nrframes = 0;
+
 static int need_refresh = 0;
 
 extern int pause;
@@ -72,6 +74,7 @@ int main(int argc, char **argv)
 		return 4;
 	}
 	joypad_init();
+	sound_init();
 	sig_connect(&canvas->keyboard_event, NULL, on_keyboard_event);
 	window_resize(main_window, 0, 0, WINDOW_WIDTH + 8, WINDOW_HEIGHT + 28, WINDOW_PLACEMENT_CENTER);
 
@@ -90,10 +93,14 @@ int main(int argc, char **argv)
 static void frame_timer_cb(void *data)
 {
 	struct timespec prev, cur;
-	usec_t us;
+	usec_t us, next_frame_us;
 	const int delay = 1000000 / FPS;
+	static usec_t err_us = 0;
+	static struct timespec target_us;
+	static int enable_timefix = 0;
 
 	getuptime(&prev);
+
 	if (!pause) {
 		if (need_refresh) {
 			update_canvas(canvas, surface);
@@ -103,12 +110,23 @@ static void frame_timer_cb(void *data)
 	}
 	getuptime(&cur);
 
+	if (enable_timefix)
+		err_us = ts_sub_diff(&cur, &target_us);
+
 	us = NSEC2USEC(ts_sub_diff(&cur, &prev));
 
-	if (delay < us)
-		fibril_timer_set(frame_timer, 1, frame_timer_cb, NULL);
-	else
-		fibril_timer_set(frame_timer, delay - us, frame_timer_cb, NULL);
+	next_frame_us = delay - (us + err_us);
+	if (next_frame_us < 1) {
+		next_frame_us = 1;
+		enable_timefix = 0;
+		err_us = 0;
+	} else {
+		target_us = cur;
+		ts_add_diff(&target_us, next_frame_us);
+		enable_timefix = 1;
+	}
+
+	fibril_timer_set(frame_timer, next_frame_us, frame_timer_cb, NULL);
 }
 
 void new_frame(uint32_t *frame)

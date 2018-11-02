@@ -5,11 +5,10 @@
 extern "C" {
 #endif
 
-struct sound_queue_ctx;
 typedef short sample_t;
 
-void sound_queue_init(struct sound_queue_ctx **ctx, long rate, int chan);
-void sound_queue_write(struct sound_queue_ctx *ctx, const sample_t *in, int count);
+void sound_queue_init(long rate, int chan);
+void sound_queue_write(const sample_t *in, int count);
 
 #ifdef __cplusplus
 }

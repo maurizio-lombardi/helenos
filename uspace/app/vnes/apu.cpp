@@ -1,5 +1,6 @@
 #include "cpu.hpp"
 #include "apu.hpp"
+#include "cppwrap.h"
 
 #include <Blip_Buffer.h>
 #include <Nes_Apu.h>
@@ -17,7 +18,7 @@ blip_sample_t outBuf[OUT_SIZE];
 
 void init()
 {
-    buf.sample_rate(96000);
+    buf.sample_rate(44100);
     buf.clock_rate(1789773);
 
     apu.output(&buf);
@@ -46,8 +47,8 @@ void run_frame(int elapsed)
     apu.end_frame(elapsed);
     buf.end_frame(elapsed);
 
-    if (buf.samples_avail() >= OUT_SIZE) {}
-        //FIXME: sound_new_samples(outBuf, buf.read_samples(outBuf, OUT_SIZE));
+    if (buf.samples_avail() >= OUT_SIZE)
+        sound_new_samples(outBuf, buf.read_samples(outBuf, OUT_SIZE));
 }
 
 

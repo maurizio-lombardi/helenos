@@ -44,8 +44,8 @@ template<bool wr> inline u8 access(u16 addr, u8 v = 0)
 
         // APU:
         case 0x4000 ... 0x4013:
-        case            0x4015:          return 0;/*FIXME: APU::access<wr>(elapsed(), addr, v);*/
-        case            0x4017:  if (wr) return 0;/*FIXME:APU::access<wr>(elapsed(), addr, v);*/
+        case            0x4015:          return APU::access<wr>(elapsed(), addr, v);
+        case            0x4017:  if (wr) return APU::access<wr>(elapsed(), addr, v);
                                  else return joypad_read_state(1);                  // Joypad 1.
 
         case            0x4014:  if (wr) dma_oam(v); break;                          // OAM DMA.
@@ -270,7 +270,7 @@ void run_frame()
         exec();
     }
 
-    //FIXME: APU::run_frame(elapsed());
+    APU::run_frame(elapsed());
 }
 
 

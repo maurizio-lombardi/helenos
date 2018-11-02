@@ -31,12 +31,12 @@ Sound_Queue::~Sound_Queue()
 
 const char* Sound_Queue::init( long sample_rate, int chan_count )
 {
-	sound_queue_init(&ctx, sample_rate, chan_count);
+	sound_queue_init(sample_rate, chan_count);
 	return NULL;
 }
 
 void Sound_Queue::write( const sample_t* in, int count )
 {
-	sound_queue_write(ctx, in, count);
+	sound_queue_write(in, count);
 }
 

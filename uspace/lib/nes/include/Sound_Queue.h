@@ -28,7 +28,6 @@ public:
 	
 private:
 	bool sound_open;
-	struct sound_queue_ctx *ctx;
 };
 
 #endif

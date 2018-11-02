@@ -10,7 +10,7 @@ void sound_init(void)
 {
 	APU::init();
 	soundQueue = new Sound_Queue;
-	soundQueue->init(96000);
+	soundQueue->init(44100);
 }
 
 void sound_new_samples(const int16_t* samples, size_t count)
