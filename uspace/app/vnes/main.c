@@ -27,7 +27,7 @@ extern int pause;
 static void frame_timer_cb(void *data);
 
 static void usage(void) {
-	printf("Usage: $%s compositor_server nes_rom\n", NAME);
+	printf("Usage: #%s compositor_server nes_rom\n", NAME);
 }
 
 static void on_keyboard_event(widget_t *widget, void *data)
