@@ -109,7 +109,7 @@ static void frame_timer_cb(void *data)
 	getuptime(&cur);
 
 	if (enable_timefix)
-		err_us = ts_sub_diff(&cur, &target_us) / 1000;
+		err_us = NSEC2USEC(ts_sub_diff(&cur, &target_us));
 
 	us = NSEC2USEC(ts_sub_diff(&cur, &prev));
 
@@ -120,7 +120,7 @@ static void frame_timer_cb(void *data)
 		err_us = 0;
 	} else {
 		target_us = cur;
-		ts_add_diff(&target_us, next_frame_us * 1000);
+		ts_add_diff(&target_us, USEC2NSEC(next_frame_us));
 		enable_timefix = 1;
 	}
 
