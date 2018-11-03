@@ -20,8 +20,6 @@ canvas_t *canvas;
 surface_t *surface;
 uint32_t *pixels;
 
-unsigned long nrframes = 0;
-
 static int need_refresh = 0;
 
 extern int pause;
