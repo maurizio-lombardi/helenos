@@ -6,9 +6,6 @@ extern "C" {
 #endif
 
 double nes_floor(double x);
-double nes_pow(double base, double exponent);
-double nes_log(double x);
-double nes_cos(double x);
 
 #ifdef __cplusplus
 }

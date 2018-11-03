@@ -6,6 +6,7 @@
 
 #include <cstring>
 #include <cstdlib>
+#include <cmath>
 
 
 /* Copyright (C) 2003-2005 Shay Green. This module is free software; you
@@ -103,7 +104,7 @@ void Blip_Buffer::bass_freq( int freq )
 		bass_shift = 31; // 32 or greater invokes undefined behavior elsewhere
 		return;
 	}
-	bass_shift = 1 + (int) nes_floor( 1.442695041 * nes_log( 0.124 * samples_per_sec / freq ) );
+	bass_shift = 1 + (int) nes_floor( 1.442695041 * log( 0.124 * samples_per_sec / freq ) );
 	if ( bass_shift < 0 )
 		bass_shift = 0;
 	if ( bass_shift > 24 )
@@ -216,7 +217,7 @@ void Blip_Impulse_::treble_eq( const blip_eq_t& new_eq )
 	generate = false;
 	eq = new_eq;
 	
-	double treble = nes_pow( 10.0, 1.0 / 20 * eq.treble ); // dB (-6dB = 0.50)
+	double treble = pow( 10.0, 1.0 / 20 * eq.treble ); // dB (-6dB = 0.50)
 	if ( treble < 0.000005 )
 		treble = 0.000005;
 	
@@ -234,11 +235,11 @@ void Blip_Impulse_::treble_eq( const blip_eq_t& new_eq )
 	
 	// reduce adjacent impulse interference by using small part of wide impulse
 	const double n_harm = 4096;
-	const double rolloff = nes_pow( treble, 1.0 / (n_harm * pt - n_harm * cutoff) );
-	const double rescale = 1.0 / nes_pow( rolloff, n_harm * cutoff );
+	const double rolloff = pow( treble, 1.0 / (n_harm * pt - n_harm * cutoff) );
+	const double rescale = 1.0 / pow( rolloff, n_harm * cutoff );
 	
-	const double pow_a_n = rescale * nes_pow( rolloff, n_harm );
-	const double pow_a_nc = rescale * nes_pow( rolloff, n_harm * cutoff );
+	const double pow_a_n = rescale * pow( rolloff, n_harm );
+	const double pow_a_nc = rescale * pow( rolloff, n_harm * cutoff );
 	
 	double total = 0.0;
 	const double to_angle = pi / 2 / n_harm / max_res;
@@ -254,16 +255,16 @@ void Blip_Impulse_::treble_eq( const blip_eq_t& new_eq )
 		//y -= rescale * dsf( angle, n_harm * cutoff, rolloff );
 		//y += rescale * dsf( angle, n_harm,          rolloff );
 		
-		const double cos_angle = nes_cos( angle );
-		const double cos_nc_angle = nes_cos( n_harm * cutoff * angle );
-		const double cos_nc1_angle = nes_cos( (n_harm * cutoff - 1.0) * angle );
+		const double cos_angle = cos( angle );
+		const double cos_nc_angle = cos( n_harm * cutoff * angle );
+		const double cos_nc1_angle = cos( (n_harm * cutoff - 1.0) * angle );
 		
 		double b = 2.0 - 2.0 * cos_angle;
 		double a = 1.0 - cos_angle - cos_nc_angle + cos_nc1_angle;
 		
 		double d = 1.0 + rolloff * (rolloff - 2.0 * cos_angle);
-		double c = pow_a_n * rolloff * nes_cos( (n_harm - 1.0) * angle ) -
-				pow_a_n * nes_cos( n_harm * angle ) -
+		double c = pow_a_n * rolloff * cos( (n_harm - 1.0) * angle ) -
+				pow_a_n * cos( n_harm * angle ) -
 				pow_a_nc * rolloff * cos_nc1_angle +
 				pow_a_nc * cos_nc_angle;
 		
@@ -272,7 +273,7 @@ void Blip_Impulse_::treble_eq( const blip_eq_t& new_eq )
 		
 		// fixed window which affects wider impulses more
 		if ( width > 12 ) {
-			double window = nes_cos( n_harm / 1.25 / Blip_Buffer::widest_impulse_ * angle );
+			double window = cos( n_harm / 1.25 / Blip_Buffer::widest_impulse_ * angle );
 			y *= window * window;
 		}
 		
