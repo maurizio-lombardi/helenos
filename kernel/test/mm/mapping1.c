@@ -26,21 +26,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <print.h>
 #include <test.h>
 #include <mm/page.h>
 #include <mm/frame.h>
 #include <arch/mm/page.h>
 #include <mm/km.h>
 #include <typedefs.h>
-#include <debug.h>
 #include <arch.h>
 
 #define TEST_MAGIC  UINT32_C(0x01234567)
 
 const char *test_mapping1(void)
 {
-	uintptr_t frame = frame_alloc(1, FRAME_NONE, 0);
+	uintptr_t frame = frame_alloc(1, FRAME_HIGHMEM, 0);
 
 	uintptr_t page0 = km_map(frame, FRAME_SIZE, FRAME_SIZE,
 	    PAGE_READ | PAGE_WRITE | PAGE_CACHEABLE);

@@ -282,15 +282,17 @@ static void vfs_connection(ipc_call_t *icall, void *arg)
 		 * IPC_M_CONNECT_ME_TO calls as opposed to callback connections
 		 * created by IPC_M_CONNECT_TO_ME.
 		 */
-		async_answer_0(icall, EOK);
+		async_accept_0(icall);
 	}
 
 	while (true) {
 		ipc_call_t call;
 		async_get_call(&call);
 
-		if (!IPC_GET_IMETHOD(call))
+		if (!IPC_GET_IMETHOD(call)) {
+			async_answer_0(&call, EOK);
 			return;
+		}
 
 		switch (IPC_GET_IMETHOD(call)) {
 		case VFS_OUT_FSPROBE:

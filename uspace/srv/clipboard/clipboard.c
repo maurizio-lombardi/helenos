@@ -154,14 +154,16 @@ static void clip_content(ipc_call_t *req)
 static void clip_connection(ipc_call_t *icall, void *arg)
 {
 	/* Accept connection */
-	async_answer_0(icall, EOK);
+	async_accept_0(icall);
 
 	while (true) {
 		ipc_call_t call;
 		async_get_call(&call);
 
-		if (!IPC_GET_IMETHOD(call))
+		if (!IPC_GET_IMETHOD(call)) {
+			async_answer_0(&call, EOK);
 			break;
+		}
 
 		switch (IPC_GET_IMETHOD(call)) {
 		case CLIPBOARD_PUT_DATA:

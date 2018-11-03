@@ -323,14 +323,16 @@ void vfs_connection(ipc_call_t *icall, void *arg)
 	 * The connection was opened via the IPC_CONNECT_ME_TO call.
 	 * This call needs to be answered.
 	 */
-	async_answer_0(icall, EOK);
+	async_accept_0(icall);
 
 	while (cont) {
 		ipc_call_t call;
 		async_get_call(&call);
 
-		if (!IPC_GET_IMETHOD(call))
+		if (!IPC_GET_IMETHOD(call)) {
+			async_answer_0(&call, EOK);
 			break;
+		}
 
 		switch (IPC_GET_IMETHOD(call)) {
 		case VFS_IN_CLONE:

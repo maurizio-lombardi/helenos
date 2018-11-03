@@ -307,6 +307,12 @@ static int ldr_load(ipc_call_t *req)
 	pcb.tcb = tls_make(prog_info.finfo.base);
 #endif
 
+	if (!pcb.tcb) {
+		DPRINTF("Failed to make TLS for '%s'.\n", progname);
+		async_answer_0(req, ENOMEM);
+		return 1;
+	}
+
 	elf_set_pcb(&prog_info, &pcb);
 
 	DPRINTF("PCB set.\n");
@@ -340,6 +346,14 @@ static __attribute__((noreturn)) void ldr_run(ipc_call_t *req)
 	DPRINTF("Reply OK\n");
 	async_answer_0(req, EOK);
 
+	/*
+	 * Wait for the hangup from the other side in order not to leave any
+	 * unanswered IPC_M_PHONE_HUNGUP messages behind.
+	 */
+	async_get_call(req);
+	assert(!IPC_GET_IMETHOD(*req));
+	async_answer_0(req, EOK);
+
 	DPRINTF("Jump to entry point at %p\n", pcb.entry);
 
 	__tcb_reset();
@@ -365,7 +379,7 @@ static void ldr_connection(ipc_call_t *icall, void *arg)
 	connected = true;
 
 	/* Accept the connection */
-	async_answer_0(icall, EOK);
+	async_accept_0(icall);
 
 	/* Ignore parameters, the connection is already open */
 	(void) icall;
@@ -375,8 +389,10 @@ static void ldr_connection(ipc_call_t *icall, void *arg)
 		ipc_call_t call;
 		async_get_call(&call);
 
-		if (!IPC_GET_IMETHOD(call))
+		if (!IPC_GET_IMETHOD(call)) {
+			async_answer_0(&call, EOK);
 			exit(0);
+		}
 
 		switch (IPC_GET_IMETHOD(call)) {
 		case LOADER_GET_TASKID:

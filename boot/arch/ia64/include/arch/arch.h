@@ -35,6 +35,7 @@
 
 #define LOADER_ADDRESS  0x4400000
 #define KERNEL_ADDRESS  0x4800000
+#define KERNEL_VADDRESS 0xe000000004800000
 
 #define STACK_SIZE                   8192
 #define STACK_ALIGNMENT              16

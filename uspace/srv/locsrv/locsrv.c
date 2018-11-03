@@ -1395,7 +1395,7 @@ static bool loc_init(void)
 static void loc_connection_supplier(ipc_call_t *icall, void *arg)
 {
 	/* Accept connection */
-	async_answer_0(icall, EOK);
+	async_accept_0(icall);
 
 	/*
 	 * Each connection begins by a LOC_SERVER_REGISTER, which precludes us
@@ -1412,8 +1412,10 @@ static void loc_connection_supplier(ipc_call_t *icall, void *arg)
 		ipc_call_t call;
 		async_get_call(&call);
 
-		if (!IPC_GET_IMETHOD(call))
+		if (!IPC_GET_IMETHOD(call)) {
+			async_answer_0(&call, EOK);
 			break;
+		}
 
 		switch (IPC_GET_IMETHOD(call)) {
 		case LOC_SERVER_UNREGISTER:
@@ -1460,14 +1462,16 @@ static void loc_connection_supplier(ipc_call_t *icall, void *arg)
 static void loc_connection_consumer(ipc_call_t *icall, void *arg)
 {
 	/* Accept connection */
-	async_answer_0(icall, EOK);
+	async_accept_0(icall);
 
 	while (true) {
 		ipc_call_t call;
 		async_get_call(&call);
 
-		if (!IPC_GET_IMETHOD(call))
+		if (!IPC_GET_IMETHOD(call)) {
+			async_answer_0(&call, EOK);
 			break;
+		}
 
 		switch (IPC_GET_IMETHOD(call)) {
 		case LOC_SERVICE_GET_ID:

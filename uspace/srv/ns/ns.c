@@ -69,7 +69,7 @@ static void ns_connection(ipc_call_t *icall, void *arg)
 		return;
 	}
 
-	async_answer_0(icall, EOK);
+	async_accept_0(icall);
 
 	while (true) {
 		ns_pending_conn_process();
@@ -128,6 +128,7 @@ static void ns_connection(ipc_call_t *icall, void *arg)
 	}
 
 	(void) ns_task_disconnect(&call);
+	async_answer_0(&call, EOK);
 }
 
 int main(int argc, char **argv)

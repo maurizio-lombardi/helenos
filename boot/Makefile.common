@@ -250,7 +250,7 @@ RD_DATA_NON_ESSENTIAL = \
 
 
 COMPONENTS = \
-	$(KERNEL_PATH)/kernel.bin \
+	$(KERNEL_PATH)/kernel.elf \
 	$(INIT_TASKS) \
 	$(INITRD).img
 

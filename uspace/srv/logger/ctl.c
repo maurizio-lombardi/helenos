@@ -67,15 +67,17 @@ void logger_connection_handler_control(ipc_call_t *icall)
 	errno_t rc;
 	int fd;
 
-	async_answer_0(icall, EOK);
+	async_accept_0(icall);
 	logger_log("control: new client.\n");
 
 	while (true) {
 		ipc_call_t call;
 		async_get_call(&call);
 
-		if (!IPC_GET_IMETHOD(call))
+		if (!IPC_GET_IMETHOD(call)) {
+			async_answer_0(&call, EOK);
 			break;
+		}
 
 		switch (IPC_GET_IMETHOD(call)) {
 		case LOGGER_CONTROL_SET_DEFAULT_LEVEL:

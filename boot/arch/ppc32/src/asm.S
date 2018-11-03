@@ -126,6 +126,7 @@ FUNCTION_BEGIN(jump_to_kernel)
 	# r4 = translate table (physical address)
 	# r5 = pages to translate
 	# r6 = real mode meeting point (physical address)
+	# r7 = kernel entry point (virtual address in kernel's address space)
 
 	# disable interrupts
 
@@ -150,15 +151,13 @@ FUNCTION_BEGIN(jump_to_kernel)
 	rfi
 FUNCTION_END(jump_to_kernel)
 
-.section REALMODE, "ax"
-
-.align PAGE_WIDTH
 SYMBOL(real_mode)
 
 	# arguments:
 	# r3 = bootinfo (physical address)
 	# r4 = translate table (physical address)
 	# r5 = pages to translate
+	# r7 = kernel entry point (virtual address in kernel's address space)
 
 	# move the images of components to the proper
 	# location using the translate table
@@ -398,23 +397,21 @@ SYMBOL(real_mode)
 
 	# start the kernel
 	#
-	# pc = PA2KA(BOOT_OFFSET)
+	# pc = kernel's entry point (r7)
 	# r3 = bootinfo (physical address)
-	# sprg0 = BOOT_OFFSET
 	# sprg3 = physical memory size
 	# sp = 0 (enforces the usage of sprg0 as exception stack)
 
-	lis r31, PA2KA(BOOT_OFFSET)@ha
-	addi r31, r31, PA2KA(BOOT_OFFSET)@l
-	mtspr srr0, r31
+	mtspr srr0, r7
 
-	lis r31, BOOT_OFFSET@ha
-	addi r31, r31, BOOT_OFFSET@l
+	# Clear sprg0. Kernel will set it.
+	li r31, 0
 	mtsprg0 r31
 
 	# bootinfo starts with a 64 bit integer containing
 	# the physical memory size, get the lower 4 bytes
 
+	// FIXME: unchecked magic offset
 	lwz r31, 4(r3)
 	mtsprg3 r31
 

@@ -141,7 +141,7 @@ static void adb_kbd_events(ipc_call_t *icall, void *arg)
 		errno_t retval = EOK;
 
 		if (!IPC_GET_IMETHOD(call)) {
-			/* TODO: Handle hangup */
+			async_answer_0(&call, EOK);
 			return;
 		}
 
@@ -198,7 +198,7 @@ static void adb_kbd_conn(ipc_call_t *icall, void *arg)
 	/*
 	 * Answer the first IPC_M_CONNECT_ME_TO call.
 	 */
-	async_answer_0(icall, EOK);
+	async_accept_0(icall);
 
 	kbd = (adb_kbd_t *)ddf_dev_data_get(ddf_fun_get_dev((ddf_fun_t *)arg));
 
