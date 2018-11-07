@@ -90,14 +90,12 @@ int main(int argc, char **argv)
 
 static void frame_timer_cb(void *data)
 {
-	struct timespec prev, cur;
-	usec_t us, next_frame_us;
+	struct timespec cur;
+	usec_t next_frame_us;
 	const int delay = 1000000 / FPS;
 	static usec_t err_us = 0;
 	static struct timespec target_us;
 	static int enable_timefix = 0;
-
-	getuptime(&prev);
 
 	if (!pause) {
 		if (need_refresh) {
@@ -111,9 +109,7 @@ static void frame_timer_cb(void *data)
 	if (enable_timefix)
 		err_us = NSEC2USEC(ts_sub_diff(&cur, &target_us));
 
-	us = NSEC2USEC(ts_sub_diff(&cur, &prev));
-
-	next_frame_us = delay - (us + err_us);
+	next_frame_us = delay - err_us;
 	if (next_frame_us < 1) {
 		next_frame_us = 1;
 		enable_timefix = 0;
