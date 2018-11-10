@@ -43,6 +43,9 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	joypad_init();
+	sound_init();
+
 	printf("Loading image %s... ", argv[2]);
 	if (cartridge_load_file(argv[2])) {
 		printf("\n%s: cannot find a valid NES game image\n", NAME);
@@ -71,8 +74,6 @@ int main(int argc, char **argv)
 		printf("%s: Cannot create the canvas\n", NAME);
 		return 4;
 	}
-	joypad_init();
-	sound_init();
 	sig_connect(&canvas->keyboard_event, NULL, on_keyboard_event);
 	window_resize(main_window, 0, 0, WINDOW_WIDTH + 8, WINDOW_HEIGHT + 28, WINDOW_PLACEMENT_CENTER);
 

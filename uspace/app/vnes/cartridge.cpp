@@ -78,7 +78,7 @@ int load(const char* fileName)
 
     CPU::power();
     PPU::reset();
-    //APU::reset();
+    APU::reset();
     return 0;
 }
 
