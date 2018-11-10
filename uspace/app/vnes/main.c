@@ -125,9 +125,10 @@ static void frame_timer_cb(void *data)
 
 void new_frame(uint32_t *frame)
 {
-	size_t nbytes = WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t);
+	const size_t nbytes = WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t);
+
 	if (memcmp(pixels, frame, nbytes) != 0) {
-		memcpy(pixels, frame, WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t));
+		memcpy(pixels, frame, nbytes);
 		need_refresh = 1;
 	} else
 		need_refresh = 0;
