@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Adam Hraska
+ * Copyright (c) 2018 Jiri Svoboda
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,20 +26,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** @addtogroup kernel_sparc64
- * @{
- */
-/**
- * @file
- * @brief	IPI functions specific to Sun4U.
- */
+#include <task.h>
+#include <pcut/pcut.h>
+#include <perm.h>
 
-#ifndef KERN_sparc64_sun4u_IPI_H_
-#define KERN_sparc64_sun4u_IPI_H_
+PCUT_INIT;
 
-extern void ipi_unicast_arch(unsigned int, int);
+PCUT_TEST_SUITE(perm);
 
-#endif
+PCUT_TEST(revoke)
+{
+	errno_t rc = perm_revoke(task_get_id(), 0xf); // XXX Need PERM_xxx
+	PCUT_ASSERT_ERRNO_VAL(EOK, rc);
+}
 
-/** @}
- */
+PCUT_EXPORT(perm);

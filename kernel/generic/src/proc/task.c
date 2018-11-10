@@ -63,7 +63,9 @@
 /** Spinlock protecting the @c tasks ordered dictionary. */
 IRQ_SPINLOCK_INITIALIZE(tasks_lock);
 
-/** Ordered dictionary of active tasks.
+/** Ordered dictionary of active tasks by task ID.
+ *
+ * Members are task_t structures.
  *
  * The task is guaranteed to exist after it was found in the @c tasks
  * dictionary as long as:
@@ -196,10 +198,9 @@ size_t tsk_destructor(void *obj)
  */
 task_t *task_create(as_t *as, const char *name)
 {
-	task_t *task = (task_t *) slab_alloc(task_cache, 0);
-	if (task == NULL) {
+	task_t *task = (task_t *) slab_alloc(task_cache, FRAME_ATOMIC);
+	if (!task)
 		return NULL;
-	}
 
 	task_create_arch(task);
 
@@ -251,11 +252,6 @@ task_t *task_create(as_t *as, const char *name)
 
 	futex_task_init(task);
 
-	/*
-	 * Get a reference to the address space.
-	 */
-	as_hold(task->as);
-
 	irq_spinlock_lock(&tasks_lock, true);
 
 	task->taskid = ++task_counter;
@@ -285,11 +281,6 @@ void task_destroy(task_t *task)
 	 * Perform architecture specific task destruction.
 	 */
 	task_destroy_arch(task);
-
-	/*
-	 * Free up dynamically allocated state.
-	 */
-	futex_task_deinit(task);
 
 	/*
 	 * Drop our reference to the address space.
@@ -635,9 +626,7 @@ void task_kill_self(bool notify)
 sys_errno_t sys_task_exit(sysarg_t notify)
 {
 	task_kill_self(notify);
-
-	/* Unreachable */
-	return EOK;
+	unreachable();
 }
 
 static void task_print(task_t *task, bool additional)

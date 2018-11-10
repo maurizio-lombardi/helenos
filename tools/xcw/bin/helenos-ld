@@ -1,5 +1,6 @@
+#!/bin/bash
 #
-# Copyright (c) 2012 Adam Hraska
+# Copyright (c) 2015 Jiri Svoboda
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,13 +26,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+# Link editor (ld) wrapper
+# HelenOS Cross Compiler Wrapper (XCW)
+# Facilitate cross-compiling external software to HelenOS
+#
 
-USPACE_PREFIX = ../..
+XCW="$(dirname "$0")"
+SRC_ROOT="$XCW/../../.."
+UARCH="$("$XCW"/helenos-bld-config --uarch)"
+CC="$("$XCW"/helenos-bld-config --cc)"
 
-BINARY = rcutest
-
-SOURCES = \
-	rcutest.c
-
-include $(USPACE_PREFIX)/Makefile.common
-
+echo helenos-ld "$@"
+"$CC" \
+    "$@" \
+    "$SRC_ROOT"/uspace/lib/c/crt0.o \
+    "$SRC_ROOT"/uspace/lib/c/crt1.o \
+    "$SRC_ROOT"/uspace/lib/c/libc.a

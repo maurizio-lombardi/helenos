@@ -47,8 +47,6 @@
 #include <arch.h>
 #include <synch/spinlock.h>
 #include <synch/waitq.h>
-#include <synch/workqueue.h>
-#include <synch/rcu.h>
 #include <cpu.h>
 #include <str.h>
 #include <context.h>
@@ -68,6 +66,7 @@
 #include <main/uinit.h>
 #include <syscall/copy.h>
 #include <errno.h>
+#include <debug.h>
 
 /** Thread states */
 const char *thread_states[] = {
@@ -165,13 +164,10 @@ static errno_t thr_constructor(void *obj, unsigned int kmflags)
 	thr_constructor_arch(thread);
 
 #ifdef CONFIG_FPU
-#ifdef CONFIG_FPU_LAZY
-	thread->saved_fpu_context = NULL;
-#else /* CONFIG_FPU_LAZY */
-	thread->saved_fpu_context = slab_alloc(fpu_context_cache, kmflags);
+	thread->saved_fpu_context = slab_alloc(fpu_context_cache,
+	    FRAME_ATOMIC | kmflags);
 	if (!thread->saved_fpu_context)
 		return ENOMEM;
-#endif /* CONFIG_FPU_LAZY */
 #endif /* CONFIG_FPU */
 
 	/*
@@ -193,15 +189,15 @@ static errno_t thr_constructor(void *obj, unsigned int kmflags)
 	kmflags |= FRAME_LOWMEM;
 	kmflags &= ~FRAME_HIGHMEM;
 
-	// XXX: All kernel stacks must be aligned to STACK_SIZE,
-	//      see get_stack_base().
+	// NOTE: All kernel stacks must be aligned to STACK_SIZE,
+	//       see get_stack_base().
 
 	uintptr_t stack_phys =
 	    frame_alloc(STACK_FRAMES, kmflags, STACK_SIZE - 1);
 	if (!stack_phys) {
 #ifdef CONFIG_FPU
-		if (thread->saved_fpu_context)
-			slab_free(fpu_context_cache, thread->saved_fpu_context);
+		assert(thread->saved_fpu_context);
+		slab_free(fpu_context_cache, thread->saved_fpu_context);
 #endif
 		return ENOMEM;
 	}
@@ -226,8 +222,8 @@ static size_t thr_destructor(void *obj)
 	frame_free(KA2PA(thread->kstack), STACK_FRAMES);
 
 #ifdef CONFIG_FPU
-	if (thread->saved_fpu_context)
-		slab_free(fpu_context_cache, thread->saved_fpu_context);
+	assert(thread->saved_fpu_context);
+	slab_free(fpu_context_cache, thread->saved_fpu_context);
 #endif
 
 	return STACK_FRAMES;  /* number of frames freed */
@@ -271,7 +267,6 @@ void thread_wire(thread_t *thread, cpu_t *cpu)
 static void before_thread_is_ready(thread_t *thread)
 {
 	assert(irq_spinlock_locked(&thread->lock));
-	workq_before_thread_is_ready(thread);
 }
 
 /** Make thread ready
@@ -343,9 +338,14 @@ void thread_ready(thread_t *thread)
 thread_t *thread_create(void (*func)(void *), void *arg, task_t *task,
     thread_flags_t flags, const char *name)
 {
-	thread_t *thread = (thread_t *) slab_alloc(thread_cache, 0);
+	thread_t *thread = (thread_t *) slab_alloc(thread_cache, FRAME_ATOMIC);
 	if (!thread)
 		return NULL;
+
+	if (thread_create_arch(thread, flags) != EOK) {
+		slab_free(thread_cache, thread);
+		return NULL;
+	}
 
 	/* Not needed, but good for debugging */
 	memsetb(thread->kstack, STACK_SIZE, 0);
@@ -398,8 +398,6 @@ thread_t *thread_create(void (*func)(void *), void *arg, task_t *task,
 
 	thread->task = task;
 
-	thread->workq = NULL;
-
 	thread->fpu_context_exists = false;
 	thread->fpu_context_engaged = false;
 
@@ -410,11 +408,6 @@ thread_t *thread_create(void (*func)(void *), void *arg, task_t *task,
 	thread->btrace = false;
 	udebug_thread_initialize(&thread->udebug);
 #endif
-
-	/* Might depend on previous initialization */
-	thread_create_arch(thread);
-
-	rcu_thread_init(thread);
 
 	if ((flags & THREAD_FLAG_NOATTACH) != THREAD_FLAG_NOATTACH)
 		thread_attach(thread, task);
@@ -659,6 +652,10 @@ errno_t thread_join_timeout(thread_t *thread, uint32_t usec, unsigned int flags)
 	irq_spinlock_unlock(&thread->lock, true);
 
 	return waitq_sleep_timeout(&thread->join_wq, usec, flags, NULL);
+
+	// FIXME: join should deallocate the thread.
+	//        Current code calls detach after join, that's contrary to how
+	//        join is used in other threading APIs.
 }
 
 /** Detach thread.

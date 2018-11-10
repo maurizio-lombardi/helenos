@@ -78,8 +78,6 @@
 
 #include <synch/waitq.h>
 #include <synch/spinlock.h>
-#include <synch/workqueue.h>
-#include <synch/rcu.h>
 
 #define ALIVE_CHARS  4
 
@@ -109,14 +107,6 @@ void kinit(void *arg)
 
 	interrupts_disable();
 
-	/* Start processing RCU callbacks. RCU is fully functional afterwards. */
-	rcu_kinit_init();
-
-	/*
-	 * Start processing work queue items. Some may have been queued during boot.
-	 */
-	workq_global_worker_init();
-
 #ifdef CONFIG_SMP
 	if (config.cpu_count > 1) {
 		waitq_initialize(&ap_completion_wq);
@@ -129,12 +119,11 @@ void kinit(void *arg)
 		 */
 		thread = thread_create(kmp, NULL, TASK,
 		    THREAD_FLAG_UNCOUNTED, "kmp");
-		if (thread != NULL) {
-			thread_wire(thread, &cpus[0]);
-			thread_ready(thread);
-		} else
+		if (!thread)
 			panic("Unable to create kmp thread.");
 
+		thread_wire(thread, &cpus[0]);
+		thread_ready(thread);
 		thread_join(thread);
 		thread_detach(thread);
 

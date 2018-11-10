@@ -78,7 +78,6 @@ GENERIC_SOURCES = \
 	generic/l18n/langs.c \
 	generic/pcb.c \
 	generic/smc.c \
-	generic/smp_memory_barrier.c \
 	generic/task.c \
 	generic/imath.c \
 	generic/inet/addr.c \
@@ -133,7 +132,6 @@ GENERIC_SOURCES = \
 	generic/thread/thread.c \
 	generic/thread/tls.c \
 	generic/thread/futex.c \
-	generic/thread/rcu.c \
 	generic/thread/mpsc.c \
 	generic/sysinfo.c \
 	generic/ipc.c \
@@ -195,6 +193,7 @@ TEST_SOURCES = \
 	test/io/table.c \
 	test/stdio/scanf.c \
 	test/odict.c \
+	test/perm.c \
 	test/qsort.c \
 	test/sprintf.c \
 	test/stdio.c \

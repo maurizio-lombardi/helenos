@@ -53,8 +53,6 @@
 #include <arch/cycle.h>
 #include <atomic.h>
 #include <synch/spinlock.h>
-#include <synch/workqueue.h>
-#include <synch/rcu.h>
 #include <config.h>
 #include <context.h>
 #include <fpu_context.h>
@@ -89,7 +87,6 @@ static void before_task_runs(void)
 static void before_thread_runs(void)
 {
 	before_thread_runs_arch();
-	rcu_before_thread_runs();
 
 #ifdef CONFIG_FPU_LAZY
 	if (THREAD == CPU->fpu_owner)
@@ -130,15 +127,12 @@ static void before_thread_runs(void)
  */
 static void after_thread_ran(void)
 {
-	workq_after_thread_ran();
-	rcu_after_thread_ran();
 	after_thread_ran_arch();
 }
 
 #ifdef CONFIG_FPU_LAZY
 void scheduler_fpu_lazy_request(void)
 {
-restart:
 	fpu_enable();
 	irq_spinlock_lock(&CPU->lock, false);
 
@@ -157,17 +151,6 @@ restart:
 	if (THREAD->fpu_context_exists) {
 		fpu_context_restore(THREAD->saved_fpu_context);
 	} else {
-		/* Allocate FPU context */
-		if (!THREAD->saved_fpu_context) {
-			/* Might sleep */
-			irq_spinlock_unlock(&THREAD->lock, false);
-			irq_spinlock_unlock(&CPU->lock, false);
-			THREAD->saved_fpu_context =
-			    (fpu_context_t *) slab_alloc(fpu_context_cache, 0);
-
-			/* We may have switched CPUs during slab_alloc */
-			goto restart;
-		}
 		fpu_init();
 		THREAD->fpu_context_exists = true;
 	}
@@ -429,7 +412,6 @@ void scheduler_separated_stack(void)
 			break;
 
 		case Exiting:
-			rcu_thread_exiting();
 		repeat:
 			if (THREAD->detached) {
 				thread_destroy(THREAD, false);

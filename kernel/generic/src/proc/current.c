@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Adam Hraska
+ * Copyright (c) 2005 Jakub Jermar
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,23 +26,54 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** @addtogroup kernel_abs32le
+/** @addtogroup kernel_generic_proc
  * @{
  */
-/** @file
+
+/**
+ * @file
+ * @brief CURRENT structure functions.
+ *
+ * This file contains functions to manage the CURRENT structure.
+ * The CURRENT structure exists at the base address of every kernel
+ * stack and carries information about current settings
+ * (e.g. current CPU, current thread, task and address space
+ * and current preemption counter).
  */
 
-#include <smp/smp_call.h>
-#include <panic.h>
+#include <arch.h>
+#include <assert.h>
 
-#ifdef CONFIG_SMP
-
-void arch_smp_call_ipi(unsigned int cpu_id)
+/** Initialize CURRENT structure
+ *
+ * Initialize CURRENT structure passed as argument.
+ *
+ * @param the CURRENT structure to be initialized.
+ *
+ */
+void current_initialize(current_t *the)
 {
-	panic("smp_call IPI not implemented.");
+	the->preemption = 0;
+	the->cpu = NULL;
+	the->thread = NULL;
+	the->task = NULL;
+	the->as = NULL;
+	the->magic = MAGIC;
 }
 
-#endif /* CONFIG_SMP */
+/** Copy CURRENT structure
+ *
+ * Copy the source CURRENT structure to the destination CURRENT structure.
+ *
+ * @param src The source CURRENT structure.
+ * @param dst The destination CURRENT structure.
+ *
+ */
+NO_TRACE void current_copy(current_t *src, current_t *dst)
+{
+	assert(src->magic == MAGIC);
+	*dst = *src;
+}
 
 /** @}
  */
