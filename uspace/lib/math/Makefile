@@ -46,7 +46,8 @@ SOURCES = \
 	generic/cos.c \
 	generic/sincos.c \
 	generic/trunc.c \
-	generic/pow.c
+	generic/pow.c \
+	generic/scalbn.c
 
 TEST_SOURCES = \
 	test/rounding.c \
