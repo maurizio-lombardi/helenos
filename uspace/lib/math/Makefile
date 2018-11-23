@@ -47,6 +47,7 @@ SOURCES = \
 	generic/sincos.c \
 	generic/trunc.c \
 	generic/pow.c \
+	generic/sqrt.c \
 	generic/scalbn.c
 
 TEST_SOURCES = \
