@@ -1,35 +1,62 @@
 /*
- * Copyright (c) 2018 Manuele Conti
- * All rights reserved.
+ * ====================================================
+ * Copyright (C) 2004 by Sun Microsystems, Inc. All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * - Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the distribution.
- * - The name of the author may not be used to endorse or promote products
- *   derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Permission to use, copy, modify, and distribute this
+ * software is freely granted, provided that this notice 
+ * is preserved.
+ * ====================================================
  */
 
 /** @addtogroup libmath
  * @{
  */
 /** @file pow mathematical function
+ */
+
+/* __ieee754_pow(x,y) return x**y
+ *
+ *		      n
+ * Method:  Let x =  2   * (1+f)
+ *	1. Compute and return log2(x) in two pieces:
+ *		log2(x) = w1 + w2,
+ *	   where w1 has 53-24 = 29 bit trailing zeros.
+ *	2. Perform y*log2(x) = n+y' by simulating muti-precision 
+ *	   arithmetic, where |y'|<=0.5.
+ *	3. Return x**y = 2**n*exp(y'*log2)
+ *
+ * Special cases:
+ *	1.  (anything) ** 0  is 1
+ *	2.  (anything) ** 1  is itself
+ *	3.  (anything) ** NAN is NAN
+ *	4.  NAN ** (anything except 0) is NAN
+ *	5.  +-(|x| > 1) **  +INF is +INF
+ *	6.  +-(|x| > 1) **  -INF is +0
+ *	7.  +-(|x| < 1) **  +INF is +0
+ *	8.  +-(|x| < 1) **  -INF is +INF
+ *	9.  +-1         ** +-INF is NAN
+ *	10. +0 ** (+anything except 0, NAN)               is +0
+ *	11. -0 ** (+anything except 0, NAN, odd integer)  is +0
+ *	12. +0 ** (-anything except 0, NAN)               is +INF
+ *	13. -0 ** (-anything except 0, NAN, odd integer)  is +INF
+ *	14. -0 ** (odd integer) = -( +0 ** (odd integer) )
+ *	15. +INF ** (+anything except 0,NAN) is +INF
+ *	16. +INF ** (-anything except 0,NAN) is +0
+ *	17. -INF ** (anything)  = -0 ** (-anything)
+ *	18. (-anything) ** (integer) is (-1)**(integer)*(+anything**integer)
+ *	19. (-anything except 0 and inf) ** (non-integer) is NAN
+ *
+ * Accuracy:
+ *	pow(x,y) returns x**y nearly rounded. In particular
+ *			pow(integer,integer)
+ *	always returns the correct integer provided it is 
+ *	representable.
+ *
+ * Constants :
+ * The hexadecimal values are the intended ones for the following 
+ * constants. The decimal values may be used, provided that the 
+ * compiler will convert from decimal to binary accurately enough 
+ * to produce the hexadecimal values shown.
  */
 
 #include <errno.h>
@@ -108,7 +135,7 @@ pow(double x, double y)
 		k = (iy>>20)-0x3ff;	   /* exponent */
 		if(k>20) {
 		    j = ly>>(52-k);
-		    if((j<<(52-k))==(int32_t)ly) yisint = 2-(j&1);
+		    if((uint32_t)(j<<(52-k))==ly) yisint = 2-(j&1);
 		} else if(ly==0) {
 		    j = iy>>(20-k);
 		    if((j<<(20-k))==iy) yisint = 2-(j&1);
@@ -120,7 +147,7 @@ pow(double x, double y)
 	if(ly==0) {
 	    if (iy==0x7ff00000) {	/* y is +-inf */
 	        if(((ix-0x3ff00000)|lx)==0)
-		    return  one;	/* (-1)**+-inf is NaN */
+		    return  one;	/* (-1)**+-inf is 1 */
 	        else if (ix >= 0x3ff00000)/* (|x|>1)**+-inf = inf,0 */
 		    return (hy>=0)? y: zero;
 	        else			/* (|x|<1)**-,+inf = inf,0 */
@@ -129,15 +156,10 @@ pow(double x, double y)
 	    if(iy==0x3ff00000) {	/* y is  +-1 */
 		if(hy<0) return one/x; else return x;
 	    }
-            if(hy==0x40000000) return x*x;   /* y is  2 */
-            if(hy==0x40080000) return x*x*x; /* y is  3 */
-            if(hy==0x40100000) {             /* y is  4 */
-                u = x*x;
-                return u*u;
-            }
-	    if(hy==0x3fe00000) {             /* y is  0.5 */
+	    if(hy==0x40000000) return x*x; /* y is  2 */
+	    if(hy==0x3fe00000) {	/* y is  0.5 */
 		if(hx>=0)	/* x >= +0 */
-                    return sqrt(x);
+		return sqrt(x);
 	    }
 	}
 
@@ -286,7 +308,6 @@ pow(double x, double y)
 	j += (n<<20);
 	if((j>>20)<=0) z = scalbn(z,n);	/* subnormal output */
 	else SET_HIGH_WORD(z,j);
-
 	return s*z;
 }
 

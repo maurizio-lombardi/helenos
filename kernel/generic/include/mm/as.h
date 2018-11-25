@@ -178,6 +178,7 @@ typedef union mem_backend_data {
 
 	/** elf_backend members */
 	struct {
+		uintptr_t elf_base;
 		elf_header_t *elf;
 		elf_segment_header_t *segment;
 	};
@@ -321,6 +322,7 @@ extern sysarg_t sys_as_area_create(uintptr_t, size_t, unsigned int, uintptr_t,
     as_area_pager_info_t *);
 extern sys_errno_t sys_as_area_resize(uintptr_t, size_t, unsigned int);
 extern sys_errno_t sys_as_area_change_flags(uintptr_t, unsigned int);
+extern sys_errno_t sys_as_area_get_info(uintptr_t, as_area_info_t *);
 extern sys_errno_t sys_as_area_destroy(uintptr_t);
 
 /* Introspection functions. */

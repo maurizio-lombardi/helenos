@@ -65,6 +65,7 @@ DIRS = \
 	app/modplay \
 	app/netecho \
 	app/nterm \
+	app/perf \
 	app/redir \
 	app/sbi \
 	app/sportdmp \
@@ -141,6 +142,7 @@ DIRS = \
 	srv/hw/char/s3c24xx_uart \
 	srv/hid/rfb \
 	srv/test/chardev-test \
+	srv/test/ipc-test \
 	drv/audio/hdaudio \
 	drv/audio/sb16 \
 	drv/root/root \
@@ -279,6 +281,7 @@ clean: $(CLEANS)
 	find lib app drv srv -name '*.o' -follow -exec rm \{\} \;
 	find lib app drv srv -name '*.lo' -follow -exec rm \{\} \;
 	find lib app drv srv -name '*.d' -follow -exec rm \{\} \;
+	rm -fr export
 
 $(CLEANS):
 	-$(MAKE) -r -C $(basename $@) fasterclean

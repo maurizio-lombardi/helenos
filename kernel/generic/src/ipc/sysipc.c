@@ -769,14 +769,14 @@ sys_errno_t sys_ipc_wait_for_call(ipc_data_t *calldata, uint32_t usec,
     unsigned int flags)
 {
 	call_t *call = NULL;
-
+	errno_t rc;
 restart:
 
 #ifdef CONFIG_UDEBUG
 	udebug_stoppable_begin();
 #endif
 
-	errno_t rc = ipc_wait_for_call(&TASK->answerbox, usec,
+	rc = ipc_wait_for_call(&TASK->answerbox, usec,
 	    flags | SYNCH_FLAGS_INTERRUPTIBLE, &call);
 
 #ifdef CONFIG_UDEBUG
@@ -829,8 +829,7 @@ restart:
 	call->data.cap_handle = handle;
 
 	/*
-	 * Include phone hash of the caller in the request, copy the whole
-	 * call->data, not only call->data.args.
+	 * Copy the whole call->data to include the request label.
 	 */
 	rc = STRUCT_TO_USPACE(calldata, &call->data);
 	if (rc != EOK)

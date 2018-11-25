@@ -40,12 +40,6 @@
 #include <atomic.h>
 #include <mm/frame.h>
 
-/** Minimum size to be allocated by malloc */
-#define SLAB_MIN_MALLOC_W  4
-
-/** Maximum size to be allocated by malloc */
-#define SLAB_MAX_MALLOC_W  22
-
 /** Initial Magazine size (TODO: dynamically growing magazines) */
 #define SLAB_MAG_SIZE  4
 
@@ -137,13 +131,6 @@ extern void slab_enable_cpucache(void);
 
 /* kconsole debug */
 extern void slab_print_list(void);
-
-/* malloc support */
-extern void *malloc(size_t)
-    __attribute__((malloc));
-extern void *realloc(void *, size_t)
-    __attribute__((warn_unused_result));
-extern void free(void *);
 
 #endif
 

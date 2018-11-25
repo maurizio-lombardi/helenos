@@ -60,6 +60,7 @@
 #include <arch/interrupt.h>
 #include <ipc/irq.h>
 #include <cap/cap.h>
+#include <stdlib.h>
 
 static void ipc_forget_call(call_t *);
 
@@ -118,7 +119,7 @@ call_t *ipc_call_alloc(void)
 	if (!call)
 		return NULL;
 
-	kobject_t *kobj = (kobject_t *) malloc(sizeof(kobject_t));
+	kobject_t *kobj = kobject_alloc(0);
 	if (!kobj) {
 		slab_free(call_cache, call);
 		return NULL;

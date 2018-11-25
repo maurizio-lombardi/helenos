@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 Jakub Jermar
+ * Copyright (c) 2018 Jiri Svoboda
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,37 +26,31 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** @addtogroup kernel_sync
+/** @addtogroup perf
  * @{
  */
 /** @file
  */
 
-#ifndef KERN_FUTEX_H_
-#define KERN_FUTEX_H_
+#ifndef PERF_H_
+#define PERF_H_
 
-#include <typedefs.h>
-#include <synch/waitq.h>
-#include <adt/hash_table.h>
+#include <stdbool.h>
 
-/** Kernel-side futex structure. */
+typedef const char *(*benchmark_entry_t)(void);
+
 typedef struct {
-	/** Physical address of the status variable. */
-	uintptr_t paddr;
-	/** Wait queue for threads waiting for futex availability. */
-	waitq_t wq;
-	/** Futex hash table link. */
-	ht_link_t ht_link;
-	/** Number of tasks that reference this futex. */
-	size_t refcount;
-} futex_t;
+	const char *name;
+	const char *desc;
+	benchmark_entry_t entry;
+} benchmark_t;
 
-extern void futex_init(void);
-extern sys_errno_t sys_futex_sleep(uintptr_t, uintptr_t);
-extern sys_errno_t sys_futex_wakeup(uintptr_t);
+extern const char *bench_malloc1(void);
+extern const char *bench_malloc2(void);
+extern const char *bench_ns_ping(void);
+extern const char *bench_ping_pong(void);
 
-extern void futex_task_cleanup(void);
-extern void futex_task_init(struct task *);
+extern benchmark_t benchmarks[];
 
 #endif
 

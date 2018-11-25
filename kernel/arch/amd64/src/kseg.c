@@ -36,7 +36,7 @@
 #include <arch/asm.h>
 #include <panic.h>
 #include <arch/kseg_struct.h>
-#include <mm/slab.h>
+#include <stdlib.h>
 
 /**
  * Allocate and initialize a per-CPU structure to be accessible via the

@@ -54,6 +54,7 @@ typedef enum {
 	KOBJECT_TYPE_CALL,
 	KOBJECT_TYPE_IRQ,
 	KOBJECT_TYPE_PHONE,
+	KOBJECT_TYPE_WAITQ,
 	KOBJECT_TYPE_MAX
 } kobject_type_t;
 
@@ -62,6 +63,7 @@ struct task;
 struct call;
 struct irq;
 struct phone;
+struct waitq;
 
 typedef struct kobject_ops {
 	void (*destroy)(void *);
@@ -87,6 +89,7 @@ typedef struct kobject {
 		struct call *call;
 		struct irq *irq;
 		struct phone *phone;
+		struct waitq *waitq;
 	};
 } kobject_t;
 
@@ -133,6 +136,8 @@ extern kobject_t *cap_unpublish(struct task *, cap_handle_t, kobject_type_t);
 extern void cap_revoke(kobject_t *);
 extern void cap_free(struct task *, cap_handle_t);
 
+extern kobject_t *kobject_alloc(unsigned int);
+extern void kobject_free(kobject_t *);
 extern void kobject_initialize(kobject_t *, kobject_type_t, void *,
     kobject_ops_t *);
 extern kobject_t *kobject_get(struct task *, cap_handle_t, kobject_type_t);
