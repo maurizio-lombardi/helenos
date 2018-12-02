@@ -4,6 +4,14 @@
 
 namespace CPU {
 
+struct state {
+	int32_t remainingCycles;
+	u16 PC;
+	u16 _pad;
+	u8 ram[0x800];
+	u8 A, X, Y, S;
+	u8 flags, nmi, irq;
+};
 
 enum IntType { NMI, RESET, IRQ, BRK };  // Interrupt type.
 typedef u16 (*Mode)(void);              // Addressing mode.
@@ -28,5 +36,7 @@ int dmc_read(void*, cpu_addr_t addr);
 void power();
 void run_frame();
 
+struct CPU::state *dump(void);
+void restore(struct CPU::state *s);
 
 }

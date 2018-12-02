@@ -273,5 +273,35 @@ void run_frame()
     APU::run_frame(elapsed());
 }
 
+struct CPU::state *dump(void)
+{
+	struct CPU::state *s = new CPU::state;
+
+	memcpy(s->ram, ram, 0x800);
+	s->A = A;
+	s->X = X;
+	s->Y = Y;
+	s->S = S;
+	s->PC = PC;
+	s->flags = P.get();
+	s->nmi = nmi;
+	s->irq = irq;
+	s->remainingCycles = remainingCycles;
+	return s;
+}
+
+void restore(struct CPU::state *s)
+{
+	memcpy(ram, s->ram, 0x800);
+	A = s->A;
+	X = s->X;
+	Y = s->Y;
+	S = s->S;
+	PC = s->PC;
+	P.set(s->flags);
+	nmi = s->nmi;
+	irq = s->irq;
+	remainingCycles = s->remainingCycles;
+}
 
 }

@@ -345,6 +345,68 @@ void step()
     }
 }
 
+struct PPU::PPUState *dump(void)
+{
+	struct PPU::PPUState *p = new PPU::PPUState;
+
+	p->scanline = scanline;
+	p->dot = dot;
+	p->bgShiftL = bgShiftL;
+	p->bgShiftH = bgShiftH;
+	p->mirroring = mirroring;
+	memcpy(p->oam, oam, sizeof(Sprite) * 8);
+	memcpy(p->secOam, secOam, sizeof(Sprite) * 8);
+	memcpy(p->ciRam, ciRam, 0x800);
+	memcpy(p->cgRam, cgRam, 0x20);
+	p->vAddr = vAddr;
+	p->tAddr = tAddr;
+	p->fX = fX;
+	p->oamAddr = oamAddr;
+	p->ctrl = ctrl;
+	p->mask = mask;
+	p->status = status;
+	p->nt = nt;
+	p->at = at;
+	p->bgL = bgL;
+	p->bgH = bgH;
+	p->atShiftL = atShiftL;
+	p->atShiftH = atShiftH;
+	p->atLatchL = atLatchL;
+	p->atLatchH = atLatchH;
+	p->frameOdd = frameOdd;
+
+	return p;
+}
+
+void restore(struct PPUState *p)
+{
+	scanline = p->scanline;
+	dot = p->dot;
+	bgShiftL = p->bgShiftL;
+	bgShiftH = p->bgShiftH;
+	mirroring = p->mirroring;
+	memcpy(oam, p->oam, sizeof(Sprite) * 8);
+	memcpy(secOam, p->secOam, sizeof(Sprite) * 8);
+	memcpy(ciRam, p->ciRam, 0x800);
+	memcpy(cgRam, p->cgRam, 0x20);
+	vAddr = p->vAddr;
+	tAddr = p->tAddr;
+	fX = p->fX;
+	oamAddr = p->oamAddr;
+	ctrl = p->ctrl;
+	mask = p->mask;
+	status = p->status;
+	nt = p->nt;
+	at = p->at;
+	bgL = p->bgL;
+	bgH = p->bgH;
+	atShiftL = p->atShiftL;
+	atShiftH = p->atShiftH;
+	atLatchL = p->atLatchL;
+	atLatchH = p->atLatchH;
+	frameOdd = p->frameOdd;
+}
+
 void reset()
 {
     frameOdd = false;

@@ -19,12 +19,14 @@ static fibril_timer_t *frame_timer = NULL;
 canvas_t *canvas;
 surface_t *surface;
 uint32_t *pixels;
+int save_req = 0;
 
 static int need_refresh = 0;
 
 extern int pause;
 
 static void frame_timer_cb(void *data);
+static int save_game(void);
 
 static void usage(void) {
 	printf("Usage: #%s compositor_server nes_rom\n", NAME);
@@ -105,6 +107,12 @@ static void frame_timer_cb(void *data)
 		}
 		cpu_run_frame();
 	}
+
+	if (save_req) {
+		save_game();
+		save_req = 0;
+	}
+
 	getuptime(&cur);
 
 	if (enable_timefix)
@@ -133,5 +141,12 @@ void new_frame(uint32_t *frame)
 		need_refresh = 1;
 	} else
 		need_refresh = 0;
+}
+
+int save_game(void)
+{
+	char fname[256];
+	snprintf(fname, sizeof(fname), "/w/data/nes_");
+	return 0;
 }
 

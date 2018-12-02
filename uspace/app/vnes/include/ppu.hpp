@@ -3,7 +3,6 @@
 
 namespace PPU {
 
-
 enum Scanline  { VISIBLE, POST, NMI, PRE };
 enum Mirroring { VERTICAL, HORIZONTAL };
 
@@ -84,10 +83,32 @@ union Addr
     unsigned r : 15;
 };
 
+struct PPUState {
+	int32_t scanline, dot;		// Rendering counters
+	u16 bgShiftL, bgShiftH;
+	Mirroring mirroring;		// Mirroring mode.
+	Sprite oam[8], secOam[8];	// Sprite buffers.
+	u8 ciRam[0x800];		// VRAM for nametables.
+	u8 cgRam[0x20];			// VRAM for palettes.
+	Addr vAddr, tAddr;		// Loopy V, T.
+	u8 fX;				// Fine X.
+	u8 oamAddr;			// OAM address.
+	Ctrl ctrl;			// PPUCTRL   ($2000) register.
+	Mask mask;			// PPUMASK   ($2001) register.
+	Status status;			// PPUSTATUS ($2002) register.
+	u8 nt, at, bgL, bgH;		// Background latches
+	// Background shift registers:
+	u8 atShiftL, atShiftH;
+	u8 atLatchL, atLatchH;
+	u8 frameOdd;
+};
+
 template <bool write> u8 access(u16 index, u8 v = 0);
 void set_mirroring(Mirroring mode);
 void step();
 void reset();
 
+struct PPUState *dump(void);
+void restore(struct PPUState *p);
 
 }
