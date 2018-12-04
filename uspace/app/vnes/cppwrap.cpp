@@ -1,4 +1,5 @@
 #include <cpu.hpp>
+#include <ppu.hpp>
 #include <Sound_Queue.h>
 #include <cartridge.hpp>
 #include <apu.hpp>
@@ -26,5 +27,20 @@ void cpu_run_frame(void)
 int cartridge_load_file(char *filename)
 {
 	return Cartridge::load(filename);
+}
+
+void *cartridge_dump(size_t *size)
+{
+	return Cartridge::dump(size);
+}
+
+void *cpu_dump(size_t *size)
+{
+	return CPU::dump(size);
+}
+
+void *ppu_dump(size_t *size)
+{
+	return PPU::dump(size);
 }
 

@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "ppu.hpp"
 #include "mappers/mapper1.hpp"
 
@@ -80,3 +81,37 @@ u8 Mapper1::chr_write(u16 addr, u8 v)
 {
     return chr[addr] = v;
 }
+
+void *Mapper1::dump(size_t *size)
+{
+	size_t total_size;
+	size_t super_size;
+	struct Mapper1::Mapper1State *s;
+
+	void *super_data = Mapper::dump(&super_size);
+
+	total_size = sizeof(Mapper1::Mapper1State) + super_size;
+	s = (struct Mapper1::Mapper1State *) malloc(total_size);
+
+	s->writeN = writeN;
+	memcpy(s->regs, regs, sizeof(regs));
+	memcpy(s->super_data, super_data, super_size);
+
+	free(super_data);
+
+	*size = total_size;
+	return s;
+}
+
+void Mapper1::restore(void *data)
+{
+	struct Mapper1::Mapper1State *s;
+
+	s = (struct Mapper1::Mapper1State *)data;
+
+	writeN = s->writeN;
+	memcpy(regs, s->regs, sizeof(regs));
+
+	Mapper::restore(s->super_data);
+}
+

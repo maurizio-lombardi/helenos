@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstdlib>
 #include "apu.hpp"
 #include "cpu.hpp"
 #include "mappers/mapper0.hpp"
@@ -8,6 +9,7 @@
 #include "mappers/mapper4.hpp"
 #include "ppu.hpp"
 #include "cartridge.hpp"
+#include "cwrap.h"
 
 namespace Cartridge {
 
@@ -38,8 +40,10 @@ void signal_scanline()
 /* Load the ROM from a file. */
 int load(const char* fileName)
 {
+    int i;
     long r = 0;
     FILE* f = fopen(fileName, "rb");
+    uint8_t *sha1;
 
     if (!f)
         return -1;
@@ -61,8 +65,18 @@ int load(const char* fileName)
     } 
     fclose(f);
 
+    sha1 = (uint8_t *)malloc(32);
+    if (!sha1)
+	return -3;
+
+    sha1_chksum(rom, 8192, sha1);
+    for (i = 0; i < 20; ++i)
+	printf("%x", sha1[i]);
+    printf("\n");
+
     int mapperNum = (rom[7] & 0xF0) | (rom[6] >> 4);
     /* FIXME: if (loaded()) delete mapper; */
+    printf("mapper %d\n", mapperNum);
     switch (mapperNum)
     {
         case 0:  mapper = new Mapper0(rom); break;
@@ -73,18 +87,29 @@ int load(const char* fileName)
 	default:
             /*FIXME: delete mapper*/
             delete rom;
-            return -3;
+            return -4;
     }
 
     CPU::power();
     PPU::reset();
     APU::reset();
+    free(sha1);
     return 0;
 }
 
 bool loaded()
 {
     return mapper != nullptr;
+}
+
+void *dump(size_t *size)
+{
+	return mapper->dump(size);
+}
+
+void restore(void *data)
+{
+	mapper->restore(data);
 }
 
 

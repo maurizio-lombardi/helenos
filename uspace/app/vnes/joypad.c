@@ -6,6 +6,7 @@ static int strobe;        // Joypad strobe latch.
 static int A, B, SEL, START, UP, DOWN, LEFT, RIGHT;
 
 int pause;
+int save_req;
 
 void joypad_init(void)
 {
@@ -13,6 +14,7 @@ void joypad_init(void)
 	UP = DOWN = LEFT = RIGHT = 0;
 
 	pause = 0;
+	save_req = 0;
 }
 
 unsigned char joypad_state_get(int n)
@@ -83,6 +85,9 @@ void joypad_keyboard_event(int c, int press)
 		break;
 	case KC_RIGHT:
 		RIGHT = press;
+		break;
+	case KC_F:
+		save_req = 1;
 		break;
 	case KC_P:
 		if (press)

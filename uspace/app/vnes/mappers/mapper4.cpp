@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "cpu.hpp"
 #include "ppu.hpp"
 #include "mappers/mapper4.hpp"
@@ -76,3 +77,50 @@ void Mapper4::signal_scanline()
     if (irqEnabled and irqCounter == 0)
         CPU::set_irq();
 }
+
+void *Mapper4::dump(size_t *size)
+{
+	size_t total_size, super_size;
+	void *super_data;
+	struct Mapper4::Mapper4State *s;
+
+	super_data = Mapper::dump(&super_size);
+	total_size = sizeof(struct Mapper4::Mapper4State) + super_size;
+
+	s = (struct Mapper4::Mapper4State *) malloc(total_size);
+
+	s->regs[0] = regs[0];
+	s->regs[1] = regs[1];
+	s->regs[2] = regs[2];
+	s->regs[3] = regs[3];
+	s->reg8000 = reg8000;
+	s->irqPeriod = irqPeriod;
+	s->irqCounter = irqCounter;
+	s->irqEnabled = irqEnabled;
+	s->horizMirroring = horizMirroring;
+
+	memcpy(s->super_data, super_data, super_size);
+
+	*size = total_size;
+	return s;
+}
+
+void Mapper4::restore(void *data)
+{
+	struct Mapper4::Mapper4State *s;
+
+	s = (struct Mapper4::Mapper4State *) data;
+
+	regs[0] = s->regs[0];
+	regs[1] = s->regs[1];
+	regs[2] = s->regs[2];
+	regs[3] = s->regs[3];
+	reg8000 = s->reg8000;
+	irqPeriod = s->irqPeriod;
+	irqCounter = s->irqCounter;
+	irqEnabled = s->irqEnabled;
+	horizMirroring = s->horizMirroring;
+
+	Mapper::restore(s->super_data);
+}
+

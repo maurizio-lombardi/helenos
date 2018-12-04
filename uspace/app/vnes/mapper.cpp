@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "ppu.hpp"
 #include "mapper.hpp"
 
@@ -45,6 +46,53 @@ u8 Mapper::read(u16 addr)
 u8 Mapper::chr_read(u16 addr)
 {
     return chr[chrMap[addr / 0x400] + (addr % 0x400)];
+}
+
+void *Mapper::dump(size_t *size)
+{
+	struct Mapper::MapperState *s;
+	size_t total_size = sizeof(Mapper::MapperState) + prgRamSize + chrSize;
+
+	s = (struct Mapper::MapperState *) malloc(total_size);
+	memcpy(s->prgMap, prgMap, sizeof(u32) * 4);
+	memcpy(s->chrMap, chrMap, sizeof(u32) * 8);
+	s->prgRamSize = prgRamSize;
+	s->chrSize = chrSize;
+	s->prgSize = prgSize;
+	s->chrRam = chrRam;
+
+	memcpy(s->dynamic_data, prgRam, prgRamSize);
+	memcpy(&s->dynamic_data[prgRamSize], chr, chrSize);
+
+	*size = total_size;
+
+	return s;
+}
+
+void Mapper::restore(void *data)
+{
+	struct Mapper::MapperState *s;
+
+	delete prgRam;
+	if (chrRam)
+		delete chr;
+
+	s = (struct Mapper::MapperState *) data;
+	chrRam = s->chrRam;
+	chrSize = s->chrSize;
+	prgSize = s->prgSize;
+
+	if (chrRam)
+		chr = new u8[chrSize];
+	else
+		chr = rom + 16 + prgSize;
+
+	memcpy(prgMap, s->prgMap, sizeof(u32) * 4);
+	memcpy(chrMap, s->chrMap, sizeof(u32) * 8);
+	prgRamSize = s->prgRamSize;
+
+	memcpy(prgRam, s->dynamic_data, prgRamSize);
+	memcpy(chr, &s->dynamic_data[prgRamSize], chrSize);
 }
 
 /* PRG mapping functions */

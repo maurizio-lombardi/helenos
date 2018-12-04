@@ -27,7 +27,7 @@
 #
 
 USPACE_PREFIX = ../..
-LIBS = nes math gui draw softrend hound
+LIBS = nes math gui draw softrend hound crypto
 BINARY = vnes
 
 EXTRA_CFLAGS = -Iinclude

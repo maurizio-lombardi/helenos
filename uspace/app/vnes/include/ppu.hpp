@@ -108,7 +108,7 @@ void set_mirroring(Mirroring mode);
 void step();
 void reset();
 
-struct PPUState *dump(void);
-void restore(struct PPUState *p);
+void *dump(size_t *size);
+void restore(void *data);
 
 }

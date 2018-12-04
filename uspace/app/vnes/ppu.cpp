@@ -4,6 +4,7 @@
 #include "ppu.hpp"
 #include "cwrap.h"
 #include <cstring>
+#include <cstdlib>
 
 namespace PPU {
 #include "palette.inc"
@@ -345,9 +346,11 @@ void step()
     }
 }
 
-struct PPU::PPUState *dump(void)
+void *dump(size_t *size)
 {
-	struct PPU::PPUState *p = new PPU::PPUState;
+	struct PPU::PPUState *p;
+
+	p = (struct PPU::PPUState *) malloc(sizeof(PPU::PPUState));
 
 	p->scanline = scanline;
 	p->dot = dot;
@@ -375,11 +378,17 @@ struct PPU::PPUState *dump(void)
 	p->atLatchH = atLatchH;
 	p->frameOdd = frameOdd;
 
+	*size = sizeof(PPU::PPUState);
+
 	return p;
 }
 
-void restore(struct PPUState *p)
+void restore(void *data)
 {
+	struct PPU::PPUState *p;
+
+	p = (struct PPU::PPUState *) data;
+
 	scanline = p->scanline;
 	dot = p->dot;
 	bgShiftL = p->bgShiftL;

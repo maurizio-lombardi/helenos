@@ -29,4 +29,17 @@ class Mapper
     virtual u8 chr_write(u16 addr, u8 v) { return v; }
 
     virtual void signal_scanline() {}
+
+    struct MapperState {
+	u32 prgMap[4];
+	u32 chrMap[8];
+	u32 prgRamSize;
+	u32 prgSize;
+	u32 chrSize;
+	u8  chrRam;
+	u8  dynamic_data[0];
+    };
+
+    virtual void *dump(size_t *size);
+    virtual void restore(void *data);
 };

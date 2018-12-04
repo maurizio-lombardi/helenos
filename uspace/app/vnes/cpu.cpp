@@ -273,9 +273,11 @@ void run_frame()
     APU::run_frame(elapsed());
 }
 
-struct CPU::state *dump(void)
+void *dump(size_t *size)
 {
-	struct CPU::state *s = new CPU::state;
+	struct CPU::state *s;
+
+	s = (struct CPU::state *) malloc(sizeof(CPU::state));
 
 	memcpy(s->ram, ram, 0x800);
 	s->A = A;
@@ -287,11 +289,17 @@ struct CPU::state *dump(void)
 	s->nmi = nmi;
 	s->irq = irq;
 	s->remainingCycles = remainingCycles;
+
+	*size = sizeof(CPU::state);
 	return s;
 }
 
-void restore(struct CPU::state *s)
+void restore(void *data)
 {
+	struct CPU::state *s;
+
+	s = (struct CPU::state *) data;
+
 	memcpy(ram, s->ram, 0x800);
 	A = s->A;
 	X = s->X;

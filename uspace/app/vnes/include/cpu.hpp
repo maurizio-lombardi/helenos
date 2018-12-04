@@ -36,7 +36,7 @@ int dmc_read(void*, cpu_addr_t addr);
 void power();
 void run_frame();
 
-struct CPU::state *dump(void);
-void restore(struct CPU::state *s);
+void *dump(size_t *size);
+void restore(void *data);
 
 }
