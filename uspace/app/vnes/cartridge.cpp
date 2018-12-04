@@ -75,7 +75,7 @@ int load(const char* fileName)
     printf("\n");
 
     int mapperNum = (rom[7] & 0xF0) | (rom[6] >> 4);
-    /* FIXME: if (loaded()) delete mapper; */
+    if (loaded()) delete mapper;
     printf("mapper %d\n", mapperNum);
     switch (mapperNum)
     {
