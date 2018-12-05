@@ -1,6 +1,5 @@
 #include "cartridge.hpp"
 #include "cpu.hpp"
-//#include "gui.hpp"
 #include "ppu.hpp"
 #include "cwrap.h"
 #include <cstring>
@@ -34,6 +33,12 @@ bool atLatchL, atLatchH;
 // Rendering counters:
 int scanline, dot;
 bool frameOdd;
+
+u8 access_res;      // Result of the operation.
+u8 access_buffer;   // VRAM read buffer.
+bool access_latch;  // Detect second reading.
+
+u16 scanline_addr;
 
 inline bool rendering() { return mask.bg || mask.spr; }
 inline int spr_height() { return ctrl.sprSz ? 16 : 8; }
@@ -78,14 +83,10 @@ void wr(u16 addr, u8 v)
 /* Access PPU through registers. */
 template <bool write> u8 access(u16 index, u8 v)
 {
-    static u8 res;      // Result of the operation.
-    static u8 buffer;   // VRAM read buffer.
-    static bool latch;  // Detect second reading.
-
     /* Write into register */
     if (write)
     {
-        res = v;
+        access_res = v;
 
         switch (index)
         {
@@ -94,13 +95,13 @@ template <bool write> u8 access(u16 index, u8 v)
             case 3:  oamAddr = v; break;                          // OAMADDR   ($2003).
             case 4:  oamMem[oamAddr++] = v; break;                // OAMDATA   ($2004).
             case 5:                                               // PPUSCROLL ($2005).
-                if (!latch) { fX = v & 7; tAddr.cX = v >> 3; }      // First write.
+                if (!access_latch) { fX = v & 7; tAddr.cX = v >> 3; }      // First write.
                 else  { tAddr.fY = v & 7; tAddr.cY = v >> 3; }      // Second write.
-                latch = !latch; break;
+                access_latch = !access_latch; break;
             case 6:                                               // PPUADDR   ($2006).
-                if (!latch) { tAddr.h = v & 0x3F; }                 // First write.
+                if (!access_latch) { tAddr.h = v & 0x3F; }                 // First write.
                 else        { tAddr.l = v; vAddr.r = tAddr.r; }     // Second write.
-                latch = !latch; break;
+                access_latch = !access_latch; break;
             case 7:  wr(vAddr.addr, v); vAddr.addr += ctrl.incr ? 32 : 1;  // PPUDATA ($2007).
         }
     }
@@ -109,19 +110,19 @@ template <bool write> u8 access(u16 index, u8 v)
         switch (index)
         {
             // PPUSTATUS ($2002):
-            case 2:  res = (res & 0x1F) | status.r; status.vBlank = 0; latch = 0; break;
-            case 4:  res = oamMem[oamAddr]; break;  // OAMDATA ($2004).
+            case 2:  access_res = (access_res & 0x1F) | status.r; status.vBlank = 0; access_latch = 0; break;
+            case 4:  access_res = oamMem[oamAddr]; break;  // OAMDATA ($2004).
             case 7:                                 // PPUDATA ($2007).
                 if (vAddr.addr <= 0x3EFF)
                 {
-                    res = buffer;
-                    buffer = rd(vAddr.addr);
+                    access_res = access_buffer;
+                    access_buffer = rd(vAddr.addr);
                 }
                 else
-                    res = buffer = rd(vAddr.addr);
+                    access_res = access_buffer = rd(vAddr.addr);
                 vAddr.addr += ctrl.incr ? 32 : 1;
         }
-    return res;
+    return access_res;
 }
 template u8 access<0>(u16, u8); template u8 access<1>(u16, u8);
 
@@ -269,8 +270,6 @@ void pixel()
 /* Execute a cycle of a scanline */
 template<Scanline s> void scanline_cycle()
 {
-    static u16 addr;
-
     if (s == NMI and dot == 1) { status.vBlank = true; if (ctrl.nmi) CPU::set_nmi(); }
     else if (s == POST and dot == 0) {new_frame(pixels);}
     else if (s == VISIBLE or s == PRE)
@@ -290,34 +289,34 @@ template<Scanline s> void scanline_cycle()
                 switch (dot % 8)
                 {
                     // Nametable:
-                    case 1:  addr  = nt_addr(); reload_shift(); break;
-                    case 2:  nt    = rd(addr);  break;
+                    case 1:  scanline_addr  = nt_addr(); reload_shift(); break;
+                    case 2:  nt    = rd(scanline_addr);  break;
                     // Attribute:
-                    case 3:  addr  = at_addr(); break;
+                    case 3:  scanline_addr  = at_addr(); break;
                     case 4:
-			at    = rd(addr);
+			at    = rd(scanline_addr);
 			if (vAddr.cY & 2)
 				at >>= 4;
                         if (vAddr.cX & 2)
 				at >>= 2;
 		    break;
                     // Background (low bits):
-                    case 5:  addr  = bg_addr(); break;
-                    case 6:  bgL   = rd(addr);  break;
+                    case 5:  scanline_addr  = bg_addr(); break;
+                    case 6:  bgL   = rd(scanline_addr);  break;
                     // Background (high bits):
-                    case 7:  addr += 8;         break;
-                    case 0:  bgH   = rd(addr); h_scroll(); break;
+                    case 7:  scanline_addr += 8;         break;
+                    case 0:  bgH   = rd(scanline_addr); h_scroll(); break;
                 } break;
-            case         256:  pixel(); bgH = rd(addr); v_scroll(); break;  // Vertical bump.
+            case         256:  pixel(); bgH = rd(scanline_addr); v_scroll(); break;  // Vertical bump.
             case         257:  pixel(); reload_shift(); h_update(); break;  // Update horizontal position.
             case 280 ... 304:  if (s == PRE)            v_update(); break;  // Update vertical position.
 
             // No shift reloading:
-            case             1:  addr = nt_addr(); if (s == PRE) status.vBlank = false; break;
-            case 321: case 339:  addr = nt_addr(); break;
+            case             1:  scanline_addr = nt_addr(); if (s == PRE) status.vBlank = false; break;
+            case 321: case 339:  scanline_addr = nt_addr(); break;
             // Nametable fetch instead of attribute:
-            case           338:  nt = rd(addr); break;
-            case           340:  nt = rd(addr); if (s == PRE && rendering() && frameOdd) dot++;
+            case           338:  nt = rd(scanline_addr); break;
+            case           340:  nt = rd(scanline_addr); if (s == PRE && rendering() && frameOdd) dot++;
         }
         // Signal scanline to mapper:
         if (dot == 260 && rendering()) Cartridge::signal_scanline();
@@ -361,13 +360,14 @@ void *dump(size_t *size)
 	memcpy(p->secOam, secOam, sizeof(Sprite) * 8);
 	memcpy(p->ciRam, ciRam, 0x800);
 	memcpy(p->cgRam, cgRam, 0x20);
+	memcpy(p->oamMem, oamMem, sizeof(oamMem));
 	p->vAddr = vAddr;
 	p->tAddr = tAddr;
 	p->fX = fX;
 	p->oamAddr = oamAddr;
-	p->ctrl = ctrl;
-	p->mask = mask;
-	p->status = status;
+	p->ctrl = ctrl.r;
+	p->mask = mask.r;
+	p->status = status.r;
 	p->nt = nt;
 	p->at = at;
 	p->bgL = bgL;
@@ -377,6 +377,10 @@ void *dump(size_t *size)
 	p->atLatchL = atLatchL;
 	p->atLatchH = atLatchH;
 	p->frameOdd = frameOdd;
+	p->access_res = access_res;
+	p->access_buffer = access_buffer;
+	p->access_latch = access_latch;
+	p->scanline_addr = scanline_addr;
 
 	*size = sizeof(PPU::PPUState);
 
@@ -398,13 +402,14 @@ void restore(void *data)
 	memcpy(secOam, p->secOam, sizeof(Sprite) * 8);
 	memcpy(ciRam, p->ciRam, 0x800);
 	memcpy(cgRam, p->cgRam, 0x20);
+	memcpy(oamMem, p->oamMem, sizeof(oamMem));
 	vAddr = p->vAddr;
 	tAddr = p->tAddr;
 	fX = p->fX;
 	oamAddr = p->oamAddr;
-	ctrl = p->ctrl;
-	mask = p->mask;
-	status = p->status;
+	ctrl.r = p->ctrl;
+	mask.r = p->mask;
+	status.r = p->status;
 	nt = p->nt;
 	at = p->at;
 	bgL = p->bgL;
@@ -414,6 +419,10 @@ void restore(void *data)
 	atLatchL = p->atLatchL;
 	atLatchH = p->atLatchH;
 	frameOdd = p->frameOdd;
+	access_res = p->access_res;
+	access_buffer = p->access_buffer;
+	access_latch = p->access_latch;
+	scanline_addr = p->scanline_addr;
 }
 
 void reset()
@@ -421,6 +430,8 @@ void reset()
     frameOdd = false;
     scanline = dot = 0;
     ctrl.r = mask.r = status.r = 0;
+    scanline_addr = 0;
+    access_res = access_buffer = access_latch = 0;
 
     memset(pixels, 0x00, sizeof(pixels));
     memset(ciRam,  0xFF, sizeof(ciRam));

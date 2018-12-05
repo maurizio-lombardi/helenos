@@ -29,7 +29,7 @@ class Mapper4 : public Mapper
     }
 
     struct Mapper4State {
-	u8 regs[4];
+	u8 regs[8];
 	u8 reg8000;
 	u8 irqPeriod;
 	u8 irqCounter;

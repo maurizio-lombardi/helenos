@@ -14,6 +14,7 @@
 namespace Cartridge {
 
 
+static uint8_t *rom_sha1 = NULL;
 Mapper* mapper = nullptr;  // Mapper chip.
 
 /* PRG-ROM access */
@@ -43,7 +44,6 @@ int load(const char* fileName)
     int i;
     long r = 0;
     FILE* f = fopen(fileName, "rb");
-    uint8_t *sha1;
 
     if (!f)
         return -1;
@@ -65,13 +65,13 @@ int load(const char* fileName)
     } 
     fclose(f);
 
-    sha1 = (uint8_t *)malloc(32);
-    if (!sha1)
+    rom_sha1 = (uint8_t *)malloc(32);
+    if (!rom_sha1)
 	return -3;
 
-    sha1_chksum(rom, 8192, sha1);
+    sha1_chksum(rom, 8192, rom_sha1);
     for (i = 0; i < 20; ++i)
-	printf("%x", sha1[i]);
+	printf("%x", rom_sha1[i]);
     printf("\n");
 
     int mapperNum = (rom[7] & 0xF0) | (rom[6] >> 4);
@@ -85,15 +85,14 @@ int load(const char* fileName)
         case 3:  mapper = new Mapper3(rom); break;
         case 4:  mapper = new Mapper4(rom); break;
 	default:
-            /*FIXME: delete mapper*/
             delete rom;
+            free(rom_sha1);
             return -4;
     }
 
     CPU::power();
     PPU::reset();
     APU::reset();
-    free(sha1);
     return 0;
 }
 
@@ -110,6 +109,11 @@ void *dump(size_t *size)
 void restore(void *data)
 {
 	mapper->restore(data);
+}
+
+uint8_t *rom_sha1_get(void)
+{
+	return rom_sha1;
 }
 
 

@@ -12,6 +12,6 @@ int load(const char* fileName);
 bool loaded();
 void *dump(size_t *size);
 void restore(void *data);
-
+uint8_t *rom_sha1_get(void);
 
 }

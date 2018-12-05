@@ -7,10 +7,12 @@
 #include <errno.h>
 #include <task.h>
 #include <str.h>
+#include <mem.h>
 #include <time.h>
 #include <loc.h>
 #include <device/clock_dev.h>
 #include <crypto.h>
+#include <getopt.h>
 #include "joypad.h"
 #include "cppwrap.h"
 #include "cwrap.h"
@@ -21,16 +23,23 @@
 #define WINDOW_HEIGHT	240
 #define FPS		60
 
+
+static struct option const long_options[] = {
+	{"help", no_argument, 0, 'h'},
+	{"restore", required_argument, 0, 'r'},
+};
+
 struct save_file_header {
 	uint8_t version;
 	char rom_filepath[256];
-	uint8_t sha1_8k[20];
+	uint8_t sha1_8k[HASH_SHA1];
 	uint32_t cpu_dump_size;
 	uint32_t ppu_dump_size;
 	uint32_t mapper_dump_size;
 	uint32_t pad[16];
 };
 
+static char *rom_filename = NULL;
 static fibril_timer_t *frame_timer = NULL;
 canvas_t *canvas;
 surface_t *surface;
@@ -43,9 +52,13 @@ extern int pause;
 
 static void frame_timer_cb(void *data);
 static int save_game(void);
+static int restore_game(char *restore_file, char *rom_filepath);
 
-static void usage(void) {
-	printf("Usage: #%s compositor_server nes_rom\n", NAME);
+static void usage(void)
+{
+	printf("Usage: #%s compositor_server [options] nes_rom\n", NAME);
+	printf("-r, --restore <path>     Restore a saved game session\n");
+	printf("-h, --help               Prints this message\n");
 }
 
 static void on_keyboard_event(widget_t *widget, void *data)
@@ -56,22 +69,55 @@ static void on_keyboard_event(widget_t *widget, void *data)
 
 int main(int argc, char **argv)
 {
+	char *sha1 = NULL;
+	int c, opt_ind;
+	char *restore_file = NULL;
+	char *comp_serv;
+
 	if (argc < 3) {
 		usage();
 		return 1;
 	}
 
+	c = optind = opt_ind = 0;
+	while (c != -1) {
+		c = getopt_long(argc, argv, "hr:", long_options,
+				&opt_ind);
+		switch (c) {
+		case 'h':
+			usage();
+			return 0;
+		case 'r':
+			restore_file = optarg;
+			break;
+		}
+	}
+
+	argv += optind;
+	comp_serv = *argv;
+	argv++;
+	rom_filename = *argv;
+
 	joypad_init();
 	sound_init();
 
-	printf("Loading image %s... ", argv[2]);
-	if (cartridge_load_file(argv[2])) {
+	if (restore_file) {
+		sha1 = malloc(HASH_SHA1);
+		if (!sha1)
+			return 1;
+	}
+
+	printf("Loading image %s... ", rom_filename);
+	if (cartridge_load_file(rom_filename)) {
 		printf("\n%s: cannot find a valid NES game image\n", NAME);
 		return 1;
 	}
 	printf("Image loading completed\n");
 
-	window_t *main_window = window_open(argv[1], NULL,
+	if (restore_file)
+		restore_game(restore_file, NULL);
+
+	window_t *main_window = window_open(comp_serv, NULL,
 	    WINDOW_MAIN | WINDOW_DECORATED, NAME);
 	if (!main_window) {
 		printf("%s: Cannot open main window\n", NAME);
@@ -180,6 +226,7 @@ int save_game(void)
 	void *cpu_data = NULL;
 	void *ppu_data = NULL;
 	struct save_file_header *hdr = NULL;
+	uint8_t *sha1;
 
 	rc = loc_category_get_id("clock", &cat_id, IPC_FLAG_BLOCKING);
 	if (rc != EOK)
@@ -236,8 +283,11 @@ int save_game(void)
 		goto exit;
 	}
 
+	sha1 = cartridge_sha1_get();
+
 	hdr->version = 1;
-	str_ncpy(hdr->rom_filepath, 255, fname, 255);
+	str_ncpy(hdr->rom_filepath, 255, rom_filename, 255);
+	memcpy(hdr->sha1_8k, sha1, HASH_SHA1);
 	hdr->cpu_dump_size = cpu_size;
 	hdr->ppu_dump_size = ppu_size;
 	hdr->mapper_dump_size = mapper_size;
@@ -256,6 +306,74 @@ exit:
 	free(ppu_data);
 	free(cpu_data);
 	free(mapper_data);
+	return rc;
+}
+
+int restore_game(char *restore_file, char *rom_filepath)
+{
+	int rc;
+	FILE *rfp = NULL;
+	void *mapper_data = NULL;
+	void *cpu_data = NULL;
+	void *ppu_data = NULL;
+	struct save_file_header *hdr = NULL;
+	uint8_t *sha1 = NULL;
+
+	rfp = fopen(restore_file, "rb");
+	if (!rfp) {
+		rc = ENOENT;
+		goto exit;
+	}
+
+	rc = ENOMEM;
+
+	sha1 = malloc(HASH_SHA1);
+	if (!sha1)
+		goto exit;
+
+	hdr = malloc(sizeof(struct save_file_header));
+	if (!hdr)
+		goto exit;
+
+	fread(hdr, 1, sizeof(struct save_file_header), rfp);
+	if (hdr->version > 1) {
+		rc = ENOTSUP;
+		goto exit;
+	}
+
+	if (rom_filepath)
+		str_ncpy(rom_filepath, 255, hdr->rom_filepath, 255);
+	memcpy(sha1, hdr->sha1_8k, HASH_SHA1);
+
+	cpu_data = malloc(hdr->cpu_dump_size);
+	if (!cpu_data)
+		goto exit;
+
+	ppu_data = malloc(hdr->ppu_dump_size);
+	if (!ppu_data)
+		goto exit;
+
+	mapper_data = malloc(hdr->mapper_dump_size);
+	if (!mapper_data)
+		goto exit;
+
+	fread(cpu_data, 1, hdr->cpu_dump_size, rfp);
+	fread(ppu_data, 1, hdr->ppu_dump_size, rfp);
+	fread(mapper_data, 1, hdr->mapper_dump_size, rfp);
+
+	cpu_restore(cpu_data);
+	ppu_restore(ppu_data);
+	cartridge_restore(mapper_data);
+
+	rc = EOK;
+exit:
+	if (rfp)
+		fclose(rfp);
+	free(hdr);
+	free(cpu_data);
+	free(mapper_data);
+	free(ppu_data);
+	free(sha1);
 	return rc;
 }
 

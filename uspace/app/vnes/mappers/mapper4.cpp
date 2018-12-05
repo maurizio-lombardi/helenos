@@ -80,6 +80,7 @@ void Mapper4::signal_scanline()
 
 void *Mapper4::dump(size_t *size)
 {
+	int i;
 	size_t total_size, super_size;
 	void *super_data;
 	struct Mapper4::Mapper4State *s;
@@ -89,10 +90,8 @@ void *Mapper4::dump(size_t *size)
 
 	s = (struct Mapper4::Mapper4State *) malloc(total_size);
 
-	s->regs[0] = regs[0];
-	s->regs[1] = regs[1];
-	s->regs[2] = regs[2];
-	s->regs[3] = regs[3];
+	for (i = 0; i < 8; ++i)
+		s->regs[i] = regs[i];
 	s->reg8000 = reg8000;
 	s->irqPeriod = irqPeriod;
 	s->irqCounter = irqCounter;
@@ -101,20 +100,21 @@ void *Mapper4::dump(size_t *size)
 
 	memcpy(s->super_data, super_data, super_size);
 
+	free(super_data);
+
 	*size = total_size;
 	return s;
 }
 
 void Mapper4::restore(void *data)
 {
+	int i;
 	struct Mapper4::Mapper4State *s;
 
 	s = (struct Mapper4::Mapper4State *) data;
 
-	regs[0] = s->regs[0];
-	regs[1] = s->regs[1];
-	regs[2] = s->regs[2];
-	regs[3] = s->regs[3];
+	for (i = 0; i < 8; ++i)
+		regs[i] = s->regs[i];
 	reg8000 = s->reg8000;
 	irqPeriod = s->irqPeriod;
 	irqCounter = s->irqCounter;

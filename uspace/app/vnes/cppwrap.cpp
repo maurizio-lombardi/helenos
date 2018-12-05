@@ -34,6 +34,16 @@ void *cartridge_dump(size_t *size)
 	return Cartridge::dump(size);
 }
 
+void cartridge_restore(void *data)
+{
+	return Cartridge::restore(data);
+}
+
+uint8_t *cartridge_sha1_get(void)
+{
+	return Cartridge::rom_sha1_get();
+}
+
 void *cpu_dump(size_t *size)
 {
 	return CPU::dump(size);
@@ -44,3 +54,12 @@ void *ppu_dump(size_t *size)
 	return PPU::dump(size);
 }
 
+void cpu_restore(void *data)
+{
+	CPU::restore(data);
+}
+
+void ppu_restore(void *data)
+{
+	PPU::restore(data);
+}
