@@ -91,6 +91,8 @@ void Mapper::restore(void *data)
 	memcpy(chrMap, s->chrMap, sizeof(u32) * 8);
 	prgRamSize = s->prgRamSize;
 
+	prgRam = new u8[prgRamSize];
+
 	memcpy(prgRam, s->dynamic_data, prgRamSize);
 	memcpy(chr, &s->dynamic_data[prgRamSize], chrSize);
 }
