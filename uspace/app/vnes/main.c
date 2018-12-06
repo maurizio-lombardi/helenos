@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <task.h>
 #include <str.h>
+#include <str_error.h>
 #include <mem.h>
 #include <time.h>
 #include <loc.h>
@@ -27,6 +28,7 @@
 static struct option const long_options[] = {
 	{"help", no_argument, 0, 'h'},
 	{"restore", required_argument, 0, 'r'},
+	{"nosound", no_argument, 0, 'n'},
 };
 
 struct save_file_header {
@@ -36,7 +38,8 @@ struct save_file_header {
 	uint32_t cpu_dump_size;
 	uint32_t ppu_dump_size;
 	uint32_t mapper_dump_size;
-	uint32_t pad[16];
+	uint32_t apu_dump_size;
+	uint32_t pad[4];
 };
 
 static char *rom_filename = NULL;
@@ -58,6 +61,7 @@ static void usage(void)
 {
 	printf("Usage: #%s compositor_server [options] nes_rom\n", NAME);
 	printf("-r, --restore <path>     Restore a saved game session\n");
+	printf("-n, --nosound            Disable sound\n");
 	printf("-h, --help               Prints this message\n");
 }
 
@@ -69,10 +73,12 @@ static void on_keyboard_event(widget_t *widget, void *data)
 
 int main(int argc, char **argv)
 {
+	int rc;
 	char *sha1 = NULL;
 	int c, opt_ind;
 	char *restore_file = NULL;
 	char *comp_serv;
+	int nosound = 0;
 
 	if (argc < 3) {
 		usage();
@@ -81,7 +87,7 @@ int main(int argc, char **argv)
 
 	c = optind = opt_ind = 0;
 	while (c != -1) {
-		c = getopt_long(argc, argv, "hr:", long_options,
+		c = getopt_long(argc, argv, "nhr:", long_options,
 				&opt_ind);
 		switch (c) {
 		case 'h':
@@ -89,6 +95,9 @@ int main(int argc, char **argv)
 			return 0;
 		case 'r':
 			restore_file = optarg;
+			break;
+		case 'n':
+			nosound = 1;
 			break;
 		}
 	}
@@ -99,7 +108,7 @@ int main(int argc, char **argv)
 	rom_filename = *argv;
 
 	joypad_init();
-	sound_init();
+	sound_init(nosound);
 
 	if (restore_file) {
 		sha1 = malloc(HASH_SHA1);
@@ -114,8 +123,13 @@ int main(int argc, char **argv)
 	}
 	printf("Image loading completed\n");
 
-	if (restore_file)
-		restore_game(restore_file, NULL);
+	if (restore_file) {
+		rc = restore_game(restore_file, NULL);
+		if (rc) {
+			printf("Game reload failed with error %s\n", str_error(rc));
+			return 1;
+		}
+	}
 
 	window_t *main_window = window_open(comp_serv, NULL,
 	    WINDOW_MAIN | WINDOW_DECORATED, NAME);
@@ -161,18 +175,27 @@ static void frame_timer_cb(void *data)
 	static usec_t err_us = 0;
 	static struct timespec target_us;
 	static int enable_timefix = 0;
+	static int flash = 0;
 
 	if (!pause) {
+		if (save_req) {
+			save_game();
+			save_req = 0;
+			flash = 30;
+		}
+
+		if (flash > 0) {
+			size_t const bytes = WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t);
+			if ((flash-- / 2) & 1)
+				memset(pixels, 0xFF, bytes);
+			need_refresh = 1;
+		}
+
 		if (need_refresh) {
 			update_canvas(canvas, surface);
 			need_refresh = 0;
 		}
 		cpu_run_frame();
-	}
-
-	if (save_req) {
-		save_game();
-		save_req = 0;
 	}
 
 	getuptime(&cur);
@@ -221,10 +244,11 @@ int save_game(void)
 	service_id_t svc_id;
 	char *svc_name = NULL;
 	int rc;
-	size_t cpu_size, ppu_size, mapper_size;
+	size_t cpu_size, ppu_size, mapper_size, apu_size;
 	void *mapper_data = NULL;
 	void *cpu_data = NULL;
 	void *ppu_data = NULL;
+	void *apu_data = NULL;
 	struct save_file_header *hdr = NULL;
 	uint8_t *sha1;
 
@@ -265,8 +289,9 @@ int save_game(void)
 	ppu_data = ppu_dump(&ppu_size);
 	cpu_data = cpu_dump(&cpu_size);
 	mapper_data = cartridge_dump(&mapper_size);
+	apu_data = apu_dump(&apu_size);
 
-	if (!mapper_data || !cpu_data || !ppu_data) {
+	if (!mapper_data || !cpu_data || !ppu_data || !apu_data) {
 		rc = ENOMEM;
 		goto exit;
 	}
@@ -291,11 +316,13 @@ int save_game(void)
 	hdr->cpu_dump_size = cpu_size;
 	hdr->ppu_dump_size = ppu_size;
 	hdr->mapper_dump_size = mapper_size;
+	hdr->apu_dump_size = apu_size;
 
 	fwrite(hdr, 1, sizeof(*hdr), fp);
 	fwrite(cpu_data, 1, cpu_size, fp);
 	fwrite(ppu_data, 1, ppu_size, fp);
 	fwrite(mapper_data, 1, mapper_size, fp);
+	fwrite(apu_data, 1, apu_size, fp);
 
 exit:
 	if (fp)
@@ -305,6 +332,7 @@ exit:
 	free(svc_ids);
 	free(ppu_data);
 	free(cpu_data);
+	free(apu_data);
 	free(mapper_data);
 	return rc;
 }
@@ -316,6 +344,7 @@ int restore_game(char *restore_file, char *rom_filepath)
 	void *mapper_data = NULL;
 	void *cpu_data = NULL;
 	void *ppu_data = NULL;
+	void *apu_data = NULL;
 	struct save_file_header *hdr = NULL;
 	uint8_t *sha1 = NULL;
 
@@ -326,10 +355,6 @@ int restore_game(char *restore_file, char *rom_filepath)
 	}
 
 	rc = ENOMEM;
-
-	sha1 = malloc(HASH_SHA1);
-	if (!sha1)
-		goto exit;
 
 	hdr = malloc(sizeof(struct save_file_header));
 	if (!hdr)
@@ -343,7 +368,13 @@ int restore_game(char *restore_file, char *rom_filepath)
 
 	if (rom_filepath)
 		str_ncpy(rom_filepath, 255, hdr->rom_filepath, 255);
-	memcpy(sha1, hdr->sha1_8k, HASH_SHA1);
+
+	sha1 = cartridge_sha1_get();
+	if (memcmp(sha1, hdr->sha1_8k, HASH_SHA1)) {
+		printf("Snapshot's hash and ROM's hash are different\n");
+		rc = ENOTSUP;
+		goto exit;
+	}
 
 	cpu_data = malloc(hdr->cpu_dump_size);
 	if (!cpu_data)
@@ -357,13 +388,19 @@ int restore_game(char *restore_file, char *rom_filepath)
 	if (!mapper_data)
 		goto exit;
 
+	apu_data = malloc(hdr->apu_dump_size);
+	if (!apu_data)
+		goto exit;
+
 	fread(cpu_data, 1, hdr->cpu_dump_size, rfp);
 	fread(ppu_data, 1, hdr->ppu_dump_size, rfp);
 	fread(mapper_data, 1, hdr->mapper_dump_size, rfp);
+	fread(apu_data, 1, hdr->apu_dump_size, rfp);
 
 	cpu_restore(cpu_data);
 	ppu_restore(ppu_data);
 	cartridge_restore(mapper_data);
+	apu_restore(apu_data);
 
 	rc = EOK;
 exit:
@@ -373,7 +410,7 @@ exit:
 	free(cpu_data);
 	free(mapper_data);
 	free(ppu_data);
-	free(sha1);
+	free(apu_data);
 	return rc;
 }
 

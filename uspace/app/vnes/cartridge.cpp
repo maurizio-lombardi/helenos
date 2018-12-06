@@ -14,7 +14,7 @@
 namespace Cartridge {
 
 
-static uint8_t *rom_sha1 = NULL;
+static uint8_t *rom_sha1 = nullptr;
 Mapper* mapper = nullptr;  // Mapper chip.
 
 /* PRG-ROM access */
@@ -41,7 +41,6 @@ void signal_scanline()
 /* Load the ROM from a file. */
 int load(const char* fileName)
 {
-    int i;
     long r = 0;
     FILE* f = fopen(fileName, "rb");
 
@@ -70,13 +69,9 @@ int load(const char* fileName)
 	return -3;
 
     sha1_chksum(rom, 8192, rom_sha1);
-    for (i = 0; i < 20; ++i)
-	printf("%x", rom_sha1[i]);
-    printf("\n");
 
     int mapperNum = (rom[7] & 0xF0) | (rom[6] >> 4);
     if (loaded()) delete mapper;
-    printf("mapper %d\n", mapperNum);
     switch (mapperNum)
     {
         case 0:  mapper = new Mapper0(rom); break;

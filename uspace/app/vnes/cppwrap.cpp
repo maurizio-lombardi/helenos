@@ -6,17 +6,23 @@
 #include "cppwrap.h"
 
 static Sound_Queue *soundQueue;
+static int sound_mute;
 
-void sound_init(void)
+void sound_init(int mute)
 {
 	APU::init();
-	soundQueue = new Sound_Queue;
-	soundQueue->init(44100);
+	sound_mute = mute;
+
+	if (!sound_mute) {
+		soundQueue = new Sound_Queue;
+		soundQueue->init(44100);
+	}
 }
 
 void sound_new_samples(const int16_t* samples, size_t count)
 {
-	soundQueue->write(samples, count);
+	if (!sound_mute)
+		soundQueue->write(samples, count);
 }
 
 void cpu_run_frame(void)
@@ -62,4 +68,14 @@ void cpu_restore(void *data)
 void ppu_restore(void *data)
 {
 	PPU::restore(data);
+}
+
+void *apu_dump(size_t *size)
+{
+	return APU::dump(size);
+}
+
+void apu_restore(void *data)
+{
+	APU::restore(data);
 }

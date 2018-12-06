@@ -1,9 +1,11 @@
+#include <cstdlib>
 #include "cpu.hpp"
 #include "apu.hpp"
 #include "cppwrap.h"
 
 #include <Blip_Buffer.h>
 #include <Nes_Apu.h>
+#include <apu_snapshot.h>
 
 void* __dso_handle;
 
@@ -51,5 +53,20 @@ void run_frame(int elapsed)
         sound_new_samples(outBuf, buf.read_samples(outBuf, OUT_SIZE));
 }
 
+void *dump(size_t *size)
+{
+	*size = sizeof(apu_snapshot_t);
+	apu_snapshot_t *snap = (apu_snapshot_t *) malloc(*size);
+
+	apu.save_snapshot(snap);
+
+	return snap;
+}
+
+void restore(void *data)
+{
+	apu_snapshot_t *snap = (apu_snapshot_t *) data;
+	apu.load_snapshot(*snap);
+}
 
 }

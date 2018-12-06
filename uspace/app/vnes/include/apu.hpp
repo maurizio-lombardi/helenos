@@ -9,5 +9,8 @@ void run_frame(int elapsed);
 void reset();
 void init();
 
+void *dump(size_t *size);
+void restore(void *data);
+
 
 }
