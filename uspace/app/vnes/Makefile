@@ -35,6 +35,7 @@ EXTRA_CXXFLAGS = -Iinclude
 
 SOURCES = \
 	main.c \
+	save.c \
 	apu.cpp \
 	mapper.cpp \
 	cartridge.cpp \
