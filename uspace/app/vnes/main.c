@@ -90,6 +90,11 @@ int main(int argc, char **argv)
 		}
 	}
 
+	if (argc - optind < 2) {
+		usage();
+		return 1;
+	}
+
 	argv += optind;
 	comp_serv = *argv;
 	argv++;
