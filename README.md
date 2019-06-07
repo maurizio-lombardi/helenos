@@ -9,6 +9,8 @@ via message passing. A failure or crash of one component does not
 directly harm others. HelenOS is therefore flexible, modular,
 extensible, fault tolerant and easy to understand.
 
+![screenshot](http://www.helenos.org/raw-attachment/wiki/Screenshots/screenshot.png "Screenshot")
+
 HelenOS aims to be compatible with the C11 and C++14 standards, but does not
 aspire to be a clone of any existing operating system and trades compatibility
 with legacy APIs for cleaner design. Most of HelenOS components have been made
@@ -23,7 +25,7 @@ incurred by them.
 
 ## Portability
 
-HelenOS runs on seven different processor architectures and machines ranging
+HelenOS runs on eight different processor architectures and machines ranging
 from embedded ARM devices and single-board computers through multicore 32-bit
 and 64-bit desktop PCs to 64-bit Itanium and SPARC rack-mount servers.
 
@@ -51,14 +53,14 @@ dependencies and try again.
 As an example, here are some of the packages you will need for Ubuntu 12.10 (may be out of date):
 
 ```
-$ sudo apt-get install build-essential libgmp-dev libmpfr-dev ppl-dev libmpc-dev zlib1g-dev texinfo libtinfo-dev xutils-dev
+$ sudo apt-get install build-essential libgmp-dev libmpfr-dev ppl-dev libmpc-dev zlib1g-dev texinfo libtinfo-dev xutils-dev flex bison
 ```
 
 Whereas for CentOS/Fedora, you will need:
 
 ```
 # sudo dnf group install 'Development Tools'
-# sudo dnf install wget texinfo libmpc-devel mpfr-devel gmp-devel PyYAML genisoimage
+# sudo dnf install wget texinfo libmpc-devel mpfr-devel gmp-devel PyYAML genisoimage flex bison
 ```
 In case the toolchain script won't work no matter how hard you try, let us know.
 Please supply as many relevant information (your OS and distribution, list of

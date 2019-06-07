@@ -210,7 +210,7 @@ static errno_t polling(void *arg)
 
 	while (true) {
 		uint8_t code = 0;
-		rc = chardev_read(kbd->chardev, &code, 1, &nwr);
+		rc = chardev_read(kbd->chardev, &code, 1, &nwr, chardev_f_none);
 		if (rc != EOK)
 			return EIO;
 
@@ -221,47 +221,55 @@ static errno_t polling(void *arg)
 			map = scanmap_e0;
 			map_size = sizeof(scanmap_e0) / sizeof(unsigned int);
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nwr);
+			rc = chardev_read(kbd->chardev, &code, 1, &nwr,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 		} else if (code == KBD_SCANCODE_SET_EXTENDED_SPECIAL) {
-			rc = chardev_read(kbd->chardev, &code, 1, &nwr);
+			rc = chardev_read(kbd->chardev, &code, 1, &nwr,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 			if (code != 0x14)
 				continue;
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nwr);
+			rc = chardev_read(kbd->chardev, &code, 1, &nwr,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 			if (code != 0x77)
 				continue;
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nwr);
+			rc = chardev_read(kbd->chardev, &code, 1, &nwr,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 			if (code != 0xe1)
 				continue;
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nwr);
+			rc = chardev_read(kbd->chardev, &code, 1, &nwr,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 			if (code != 0xf0)
 				continue;
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nwr);
+			rc = chardev_read(kbd->chardev, &code, 1, &nwr,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 			if (code != 0x14)
 				continue;
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nwr);
+			rc = chardev_read(kbd->chardev, &code, 1, &nwr,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 			if (code != 0xf0)
 				continue;
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nwr);
+			rc = chardev_read(kbd->chardev, &code, 1, &nwr,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 			if (code == 0x77)
@@ -276,7 +284,8 @@ static errno_t polling(void *arg)
 		kbd_event_type_t type;
 		if (code == KBD_SCANCODE_KEY_RELEASE) {
 			type = KEY_RELEASE;
-			rc = chardev_read(kbd->chardev, &code, 1, &nwr);
+			rc = chardev_read(kbd->chardev, &code, 1, &nwr,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 		} else {
@@ -300,7 +309,7 @@ static errno_t polling(void *arg)
  */
 static void default_connection_handler(ddf_fun_t *fun, ipc_call_t *icall)
 {
-	const sysarg_t method = IPC_GET_IMETHOD(*icall);
+	const sysarg_t method = ipc_get_imethod(icall);
 	at_kbd_t *kbd = ddf_dev_data_get(ddf_fun_get_dev(fun));
 	async_sess_t *sess;
 
@@ -417,7 +426,8 @@ errno_t at_kbd_init(at_kbd_t *kbd, ddf_dev_t *dev)
 		ddf_fun_destroy(kbd->kbd_fun);
 		return EIO;
 	}
-	rc = chardev_read(kbd->chardev, &code, 1, &bytes);
+	rc = chardev_read(kbd->chardev, &code, 1, &bytes,
+	    chardev_f_none);
 	if (rc != EOK || code != AT_KBD_ACK) {
 		ddf_msg(LVL_ERROR, "Failed to confirm keyboard enable: %hhx.",
 		    code);

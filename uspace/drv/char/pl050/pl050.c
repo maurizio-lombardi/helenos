@@ -58,7 +58,8 @@ static errno_t pl050_dev_add(ddf_dev_t *);
 static errno_t pl050_fun_online(ddf_fun_t *);
 static errno_t pl050_fun_offline(ddf_fun_t *);
 static void pl050_char_conn(ipc_call_t *, void *);
-static errno_t pl050_read(chardev_srv_t *, void *, size_t, size_t *);
+static errno_t pl050_read(chardev_srv_t *, void *, size_t, size_t *,
+    chardev_flags_t);
 static errno_t pl050_write(chardev_srv_t *, const void *, size_t, size_t *);
 
 static driver_ops_t driver_ops = {
@@ -155,7 +156,7 @@ static void pl050_interrupt(ipc_call_t *call, ddf_dev_t *dev)
 		return;
 	}
 
-	pl050->buffer[pl050->buf_wp] = IPC_GET_ARG2(*call);
+	pl050->buffer[pl050->buf_wp] = ipc_get_arg2(call);
 	pl050->buf_wp = nidx;
 	fibril_condvar_broadcast(&pl050->buf_cv);
 	fibril_mutex_unlock(&pl050->buf_lock);
@@ -241,7 +242,7 @@ error:
 }
 
 static errno_t pl050_read(chardev_srv_t *srv, void *buffer, size_t size,
-    size_t *nread)
+    size_t *nread, chardev_flags_t flags)
 {
 	pl050_t *pl050 = (pl050_t *)srv->srvs->sarg;
 	uint8_t *bp = buffer;
@@ -251,7 +252,8 @@ static errno_t pl050_read(chardev_srv_t *srv, void *buffer, size_t size,
 
 	left = size;
 	while (left > 0) {
-		while (left == size && pl050->buf_rp == pl050->buf_wp)
+		while ((flags & chardev_f_nonblock) == 0 &&
+		    left == size && pl050->buf_rp == pl050->buf_wp)
 			fibril_condvar_wait(&pl050->buf_cv, &pl050->buf_lock);
 		if (pl050->buf_rp == pl050->buf_wp)
 			break;

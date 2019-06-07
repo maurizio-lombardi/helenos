@@ -37,7 +37,6 @@ DIRS = \
 	app/bdsh \
 	app/bithenge \
 	app/blkdump \
-	app/bnchmark \
 	app/contacts \
 	app/corecfg \
 	app/cpptest \
@@ -50,6 +49,7 @@ DIRS = \
 	app/fontviewer \
 	app/getterm \
 	app/gunzip \
+	app/hbench \
 	app/init \
 	app/inet \
 	app/kill \
@@ -57,6 +57,7 @@ DIRS = \
 	app/kio \
 	app/loc \
 	app/logset \
+	app/lprint \
 	app/mixerctl \
 	app/mkfat \
 	app/mkexfat \
@@ -65,7 +66,7 @@ DIRS = \
 	app/modplay \
 	app/netecho \
 	app/nterm \
-	app/perf \
+	app/pci \
 	app/redir \
 	app/sbi \
 	app/sportdmp \
@@ -151,6 +152,7 @@ DIRS = \
 	drv/block/ata_bd \
 	drv/block/ddisk \
 	drv/block/usbmast \
+	drv/block/virtio-blk \
 	drv/bus/adb/cuda_adb \
 	drv/bus/isa \
 	drv/bus/pci/pciintel \
@@ -166,6 +168,8 @@ DIRS = \
 	drv/char/i8042 \
 	drv/char/msim-con \
 	drv/char/ns8250 \
+	drv/char/pc-lpt \
+	drv/char/pl011 \
 	drv/char/pl050 \
 	drv/char/ski-con \
 	drv/char/sun4v-con \
@@ -178,6 +182,7 @@ DIRS = \
 	drv/hid/usbhid \
 	drv/hid/xtkbd \
 	drv/intctl/apic \
+	drv/intctl/gicv2 \
 	drv/intctl/i8259 \
 	drv/intctl/icp-ic \
 	drv/intctl/obio \
@@ -188,6 +193,7 @@ DIRS = \
 	drv/nic/ar9271 \
 	drv/nic/virtio-net \
 	drv/platform/amdm37x \
+	drv/platform/arm64virt \
 	drv/platform/icp \
 	drv/platform/mac \
 	drv/platform/malta \
@@ -217,14 +223,11 @@ endif
 ## System libraries
 #
 
-BASE_LIBS = \
-	lib/c \
-	lib/cpp \
-	lib/untar
-
-LIBS = \
+DIRS += \
 	lib/fs \
 	lib/block \
+	lib/c \
+	lib/cpp \
 	lib/crypto \
 	lib/clui \
 	lib/dltest \
@@ -247,6 +250,7 @@ LIBS = \
 	lib/nic \
 	lib/ext4 \
 	lib/trackmod \
+	lib/untar \
 	lib/uri \
 	lib/usb \
 	lib/usbhost \
@@ -261,17 +265,16 @@ LIBS = \
 	lib/virtio \
 	lib/nes
 
-BASE_BUILDS := $(addsuffix .build,$(BASE_LIBS))
-BUILDS := $(addsuffix .build,$(DIRS) $(LIBS))
-BUILDS_TESTS := $(addsuffix .build-test,$(DIRS) $(LIBS) $(BASE_LIBS))
-DEPS = $(addsuffix /deps.mk,$(DIRS) $(LIBS))
-CLEANS := $(addsuffix .clean,$(DIRS) $(LIBS) $(BASE_LIBS))
+BUILDS := $(addsuffix .build,$(DIRS))
+BUILDS_TESTS := $(addsuffix .build-test,$(DIRS))
+DEPS = $(addsuffix /deps.mk,$(DIRS))
+CLEANS := $(addsuffix .clean,$(DIRS))
 
-.PHONY: all $(BASE_BUILDS) $(BUILDS) $(BUILDS_TESTS) $(CLEANS) clean export
+.PHONY: all $(BUILDS) $(BUILDS_TESTS) $(CLEANS) clean export
 
 all: $(BUILDS) $(BUILDS_TESTS)
 
-$(BUILDS_TESTS): $(BASE_BUILDS) $(BUILDS)
+$(BUILDS_TESTS): $(BUILDS)
 	$(MAKE) -r -C $(basename $@) all-test PRECHECK=$(PRECHECK)
 
 export: $(BUILDS)
@@ -287,12 +290,10 @@ clean: $(CLEANS)
 $(CLEANS):
 	-$(MAKE) -r -C $(basename $@) fasterclean
 
-$(BASE_BUILDS) $(BUILDS):
+$(BUILDS):
 	$(MAKE) -r -C $(basename $@) all PRECHECK=$(PRECHECK)
 
 $(DEPS): %/deps.mk: %/Makefile
 	$(MAKE) -r -C $(@D) deps.mk SELF_TARGET="$(@D).build"
-
-$(BUILDS): $(BASE_BUILDS)
 
 -include $(DEPS)

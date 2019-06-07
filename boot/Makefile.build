@@ -36,7 +36,7 @@ OPTIMIZATION = 3
 DEFS = -DBOOT -DRELEASE=$(RELEASE) "-DCOPYRIGHT=$(COPYRIGHT)" "-DNAME=$(NAME)" -D__$(BITS)_BITS__ -D__$(ENDIANESS)__
 
 AFLAGS = --fatal-warnings
-LDFLAGS = -Wl,--fatal-warnings,--warn-common
+LDFLAGS = -Wl,--fatal-warnings,--warn-common $(EXTRA_LDFLAGS)
 
 COMMON_CFLAGS = $(INCLUDES) -O$(OPTIMIZATION) -imacros $(CONFIG_HEADER) \
 	-ffreestanding -nostdlib \
@@ -102,7 +102,7 @@ $(LINK): | depend
 depend: $(PRE_DEPEND)
 
 %.gz: %
-	gzip -n -k -f $<
+	gzip -n -k -9 -f $<
 
 $(COMPS).tar: $(COMPONENTS)
 	tar --mtime='2032-01-01 00:00:00' --group=0 --owner=0 --no-acls --no-selinux --no-xattrs --format=ustar --transform 's/.*\///g' -cvf $@ $^

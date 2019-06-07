@@ -86,7 +86,7 @@ clean: autogen_clean
 INCLUDES = generic/include genarch/include arch/$(KARCH)/include ../abi/arch/$(KARCH)/include ../abi/include
 INCLUDES_FLAGS = $(addprefix -I,$(INCLUDES))
 
-DEFS = -DKERNEL -DRELEASE=$(RELEASE) "-DCOPYRIGHT=$(COPYRIGHT)" "-DNAME=$(NAME)" -D__$(BITS)_BITS__ -D__$(ENDIANESS)__
+DEFS = -D_HELENOS_SOURCE -DKERNEL -DRELEASE=$(RELEASE) "-DCOPYRIGHT=$(COPYRIGHT)" "-DNAME=$(NAME)" -D__$(BITS)_BITS__ -D__$(ENDIANESS)__
 
 COMMON_CFLAGS = $(INCLUDES_FLAGS) -O$(OPTIMIZATION) -imacros $(CONFIG_HEADER) \
 	-ffreestanding -nostdlib \
@@ -161,7 +161,6 @@ INSTRUMENTATION = -finstrument-functions
 
 GENERIC_SOURCES = \
 	generic/src/adt/bitmap.c \
-	generic/src/adt/btree.c \
 	generic/src/adt/hash_table.c \
 	generic/src/adt/list.c \
 	generic/src/adt/odict.c \
@@ -207,6 +206,7 @@ GENERIC_SOURCES = \
 	generic/src/lib/memfnc.c \
 	generic/src/lib/gsort.c \
 	generic/src/lib/str.c \
+	generic/src/lib/strtol.c \
 	generic/src/lib/str_error.c \
 	generic/src/lib/elf.c \
 	generic/src/lib/ra.c \
@@ -278,7 +278,6 @@ ifeq ($(CONFIG_TEST),y)
 	GENERIC_SOURCES += \
 		test/test.c \
 		test/atomic/atomic1.c \
-		test/btree/btree1.c \
 		test/fault/fault1.c \
 		test/mm/falloc1.c \
 		test/mm/falloc2.c \
@@ -313,7 +312,6 @@ endif
 
 ifeq ($(CONFIG_TRACE),y)
 	INSTRUMENTED_SOURCES = \
-		generic/src/adt/btree.c \
 		generic/src/cpu/cpu.c \
 		generic/src/ddi/ddi.c \
 		generic/src/interrupt/interrupt.c \

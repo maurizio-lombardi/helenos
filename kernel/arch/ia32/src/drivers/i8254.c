@@ -41,7 +41,7 @@
 #include <time/delay.h>
 #include <arch/cycle.h>
 #include <arch/interrupt.h>
-#include <arch/drivers/i8259.h>
+#include <genarch/drivers/i8259/i8259.h>
 #include <arch/drivers/i8254.h>
 #include <cpu.h>
 #include <config.h>
@@ -142,9 +142,13 @@ void i8254_calibrate_delay_loop(void)
 	uint32_t o2 = pio_read_8(CLK_PORT1);
 	o2 |= pio_read_8(CLK_PORT1) << 8;
 
+	uint32_t delta = (t1 - t2) - (o1 - o2);
+	if (!delta)
+		delta = 1;
+
 	CPU->delay_loop_const =
-	    ((MAGIC_NUMBER * LOOPS) / 1000) / ((t1 - t2) - (o1 - o2)) +
-	    (((MAGIC_NUMBER * LOOPS) / 1000) % ((t1 - t2) - (o1 - o2)) ? 1 : 0);
+	    ((MAGIC_NUMBER * LOOPS) / 1000) / delta +
+	    (((MAGIC_NUMBER * LOOPS) / 1000) % delta ? 1 : 0);
 
 	uint64_t clk1 = get_cycle();
 	delay(1 << SHIFT);

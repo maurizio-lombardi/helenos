@@ -61,9 +61,9 @@ typedef struct {
 	const uint8_t *addr;
 } addr_key_t;
 
-static bool nic_addr_key_equal(void *key_arg, const ht_link_t *item)
+static bool nic_addr_key_equal(const void *key_arg, const ht_link_t *item)
 {
-	addr_key_t *key = (addr_key_t *)key_arg;
+	const addr_key_t *key = key_arg;
 	nic_addr_entry_t *entry = member_to_inst(item, nic_addr_entry_t, link);
 
 	return memcmp(entry->addr, key->addr, entry->len) == 0;
@@ -80,9 +80,9 @@ static size_t addr_hash(size_t len, const uint8_t *addr)
 	return hash;
 }
 
-static size_t nic_addr_key_hash(void *k)
+static size_t nic_addr_key_hash(const void *k)
 {
-	addr_key_t *key = (addr_key_t *)k;
+	const addr_key_t *key = k;
 	return addr_hash(key->len, key->addr);
 }
 
@@ -162,7 +162,7 @@ void nic_addr_db_destroy(nic_addr_db_t *db)
  *
  * @return EOK		If the address was inserted
  * @return ENOMEM	If there was not enough memory
- * @return EEXIST	If this adress already is in the db
+ * @return EEXIST	If this address already is in the db
  */
 errno_t nic_addr_db_insert(nic_addr_db_t *db, const uint8_t *addr)
 {

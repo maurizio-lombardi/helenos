@@ -34,13 +34,15 @@
  * @brief List of all known interfaces and their codes.
  */
 
-#ifndef ABI_IPC_INTERFACES_H_
-#define ABI_IPC_INTERFACES_H_
+#ifndef _ABI_IPC_INTERFACES_H_
+#define _ABI_IPC_INTERFACES_H_
 
 #include <abi/fourcc.h>
 
-#define IFACE_EXCHANGE_MASK  0x03
-#define IFACE_MOD_MASK       0x04
+enum {
+	IFACE_EXCHANGE_MASK = 0x03,
+	IFACE_MOD_MASK      = 0x04,
+};
 
 /** Interface exchange management style
  *
@@ -182,7 +184,9 @@ typedef enum {
 	INTERFACE_VBD =
 	    FOURCC_COMPACT('v', 'b', 'd', ' ') | IFACE_EXCHANGE_SERIALIZE,
 	INTERFACE_IPC_TEST =
-	    FOURCC_COMPACT('i', 'p', 'c', 't') | IFACE_EXCHANGE_SERIALIZE
+	    FOURCC_COMPACT('i', 'p', 'c', 't') | IFACE_EXCHANGE_SERIALIZE,
+	INTERFACE_PCI =
+	    FOURCC_COMPACT('p', 'c', 'i', ' ') | IFACE_EXCHANGE_SERIALIZE
 } iface_t;
 
 #endif

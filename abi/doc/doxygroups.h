@@ -29,6 +29,11 @@
  */
 
 /**
+ * @defgroup abi_arm64 arm64
+ * @ingroup abi
+ */
+
+/**
  * @defgroup abi_ia32 ia32
  * @ingroup abi
  */
@@ -49,7 +54,7 @@
  */
 
 /**
- * @defgroup abi_riscv5 riscv5
+ * @defgroup abi_riscv64 riscv64
  * @ingroup abi
  */
 

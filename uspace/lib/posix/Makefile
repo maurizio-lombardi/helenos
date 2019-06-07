@@ -40,13 +40,11 @@ EXPORT_FILES = \
 	../softrend/libsoftrend.a \
 	../hound/libhound.a \
 	../pcm/libpcm.a \
+	../cpp/libcpp.a \
 	$(LIBC_PREFIX)/libc.a \
 	$(LIBC_PREFIX)/crt0.o \
 	$(LIBC_PREFIX)/crt1.o \
 	$(LIBRARY).a
-
-PRE_DEPEND = $(INCLUDE_LIBC)
-EXTRA_CLEAN = $(INCLUDE_LIBC)
 
 SOURCES = \
 	src/ctype.c \
@@ -95,6 +93,9 @@ EXPORT_LDLIBS = \
 EXPORT_CFLAGS = \
 	$(COMMON_CFLAGS)
 
+EXPORT_CXXFLAGS = \
+	$(COMMON_CXXFLAGS)
+
 include $(USPACE_PREFIX)/Makefile.common
 
 export: $(EXPORT_DIR)/config.mk $(EXPORT_DIR)/config.rc \
@@ -108,7 +109,7 @@ $(EXPORT_DIR)/config.mk: export-libs export-includes
 	echo 'HELENOS_TARGET="$(TARGET)"' >> $@.new
 	echo 'HELENOS_CPPFLAGS="$(EXPORT_CPPFLAGS)"' >> $@.new
 	echo 'HELENOS_CFLAGS="$(EXPORT_CFLAGS)"' >> $@.new
-	echo 'HELENOS_CXXFLAGS="$(EXPORT_CFLAGS)"' >> $@.new
+	echo 'HELENOS_CXXFLAGS="$(EXPORT_CXXFLAGS)"' >> $@.new
 	echo 'HELENOS_LDFLAGS="$(EXPORT_LDFLAGS)"' >> $@.new
 	echo 'HELENOS_LDLIBS="$(EXPORT_LDLIBS)"' >> $@.new
 	mv $@.new $@
@@ -126,7 +127,7 @@ export-libs: $(EXPORT_FILES) export-includes
 	mkdir -p $(EXPORT_DIR)/lib
 	cp -L $(EXPORT_FILES) $(EXPORT_DIR)/lib
 
-export-includes: $(INCLUDE_LIBC) $(shell find ./include ../c/arch/$(UARCH)/include $(ROOT_PATH)/abi/include -name '*.h')
+export-includes: $(shell find ./include ../c/arch/$(UARCH)/include $(ROOT_PATH)/abi/include -name '*.h')
 	mkdir -p $(EXPORT_DIR)/include
 	rm -rf $(EXPORT_DIR)/include.new
 	cp -r -L -T ./include $(EXPORT_DIR)/include.new
@@ -145,4 +146,6 @@ export-includes: $(INCLUDE_LIBC) $(shell find ./include ../c/arch/$(UARCH)/inclu
 	cp -r -L -t $(EXPORT_DIR)/include.new/libhound ../hound/include/*
 	mkdir -p $(EXPORT_DIR)/include.new/libpcm
 	cp -r -L -t $(EXPORT_DIR)/include.new/libpcm ../pcm/include/*
+	mkdir -p $(EXPORT_DIR)/include.new/libcpp
+	cp -r -L -t $(EXPORT_DIR)/include.new/libcpp ../cpp/include/*
 	mv $(EXPORT_DIR)/include.new $(EXPORT_DIR)/include

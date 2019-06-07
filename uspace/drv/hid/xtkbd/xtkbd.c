@@ -215,7 +215,7 @@ static errno_t polling(void *arg)
 		size_t map_size = sizeof(scanmap_simple) / sizeof(unsigned int);
 
 		uint8_t code = 0;
-		rc = chardev_read(kbd->chardev, &code, 1, &nread);
+		rc = chardev_read(kbd->chardev, &code, 1, &nread, chardev_f_none);
 		if (rc != EOK)
 			return EIO;
 
@@ -228,21 +228,24 @@ static errno_t polling(void *arg)
 			map = scanmap_e0;
 			map_size = sizeof(scanmap_e0) / sizeof(unsigned int);
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nread);
+			rc = chardev_read(kbd->chardev, &code, 1, &nread,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 
 			/* Handle really special keys */
 
 			if (code == 0x2a) {  /* Print Screen */
-				rc = chardev_read(kbd->chardev, &code, 1, &nread);
+				rc = chardev_read(kbd->chardev, &code, 1, &nread,
+				    chardev_f_none);
 				if (rc != EOK)
 					return EIO;
 
 				if (code != 0xe0)
 					continue;
 
-				rc = chardev_read(kbd->chardev, &code, 1, &nread);
+				rc = chardev_read(kbd->chardev, &code, 1, &nread,
+				    chardev_f_none);
 				if (rc != EOK)
 					return EIO;
 
@@ -253,14 +256,16 @@ static errno_t polling(void *arg)
 			}
 
 			if (code == 0x46) {  /* Break */
-				rc = chardev_read(kbd->chardev, &code, 1, &nread);
+				rc = chardev_read(kbd->chardev, &code, 1, &nread,
+				    chardev_f_none);
 				if (rc != EOK)
 					return EIO;
 
 				if (code != 0xe0)
 					continue;
 
-				rc = chardev_read(kbd->chardev, &code, 1, &nread);
+				rc = chardev_read(kbd->chardev, &code, 1, &nread,
+				    chardev_f_none);
 				if (rc != EOK)
 					return EIO;
 
@@ -273,35 +278,40 @@ static errno_t polling(void *arg)
 
 		/* Extended special set */
 		if (code == KBD_SCANCODE_SET_EXTENDED_SPECIAL) {
-			rc = chardev_read(kbd->chardev, &code, 1, &nread);
+			rc = chardev_read(kbd->chardev, &code, 1, &nread,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 
 			if (code != 0x1d)
 				continue;
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nread);
+			rc = chardev_read(kbd->chardev, &code, 1, &nread,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 
 			if (code != 0x45)
 				continue;
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nread);
+			rc = chardev_read(kbd->chardev, &code, 1, &nread,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 
 			if (code != 0xe1)
 				continue;
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nread);
+			rc = chardev_read(kbd->chardev, &code, 1, &nread,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 
 			if (code != 0x9d)
 				continue;
 
-			rc = chardev_read(kbd->chardev, &code, 1, &nread);
+			rc = chardev_read(kbd->chardev, &code, 1, &nread,
+			    chardev_f_none);
 			if (rc != EOK)
 				return EIO;
 
@@ -333,7 +343,7 @@ static errno_t polling(void *arg)
  */
 static void default_connection_handler(ddf_fun_t *fun, ipc_call_t *icall)
 {
-	const sysarg_t method = IPC_GET_IMETHOD(*icall);
+	const sysarg_t method = ipc_get_imethod(icall);
 	xt_kbd_t *kbd = ddf_dev_data_get(ddf_fun_get_dev(fun));
 	unsigned mods;
 	async_sess_t *sess;
@@ -344,7 +354,7 @@ static void default_connection_handler(ddf_fun_t *fun, ipc_call_t *icall)
 		 * XT keyboards do not support setting mods,
 		 * assume AT keyboard with Scan Code Set 1.
 		 */
-		mods = IPC_GET_ARG1(*icall);
+		mods = ipc_get_arg1(icall);
 		const uint8_t status = 0 |
 		    ((mods & KM_CAPS_LOCK) ? LI_CAPS : 0) |
 		    ((mods & KM_NUM_LOCK) ? LI_NUM : 0) |

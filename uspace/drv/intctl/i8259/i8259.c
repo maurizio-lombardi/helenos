@@ -107,16 +107,16 @@ static void i8259_connection(ipc_call_t *icall, void *arg)
 	while (true) {
 		async_get_call(&call);
 
-		if (!IPC_GET_IMETHOD(call)) {
+		if (!ipc_get_imethod(&call)) {
 			/* The other side has hung up. */
 			async_answer_0(&call, EOK);
 			return;
 		}
 
-		switch (IPC_GET_IMETHOD(call)) {
+		switch (ipc_get_imethod(&call)) {
 		case IRC_ENABLE_INTERRUPT:
 			async_answer_0(&call, pic_enable_irq(i8259,
-			    IPC_GET_ARG1(call)));
+			    ipc_get_arg1(&call)));
 			break;
 		case IRC_DISABLE_INTERRUPT:
 			/* XXX TODO */
@@ -141,6 +141,7 @@ errno_t i8259_add(i8259_t *i8259, i8259_res_t *res)
 	ioport8_t *regs1;
 	ddf_fun_t *fun_a = NULL;
 	errno_t rc;
+	bool bound = false;
 
 	if ((sysinfo_get_value("i8259", &have_i8259) != EOK) || (!have_i8259)) {
 		printf("%s: No i8259 found\n", NAME);
@@ -173,12 +174,16 @@ errno_t i8259_add(i8259_t *i8259, i8259_res_t *res)
 		goto error;
 	}
 
+	bound = true;
+
 	rc = ddf_fun_add_to_category(fun_a, "irc");
 	if (rc != EOK)
 		goto error;
 
 	return EOK;
 error:
+	if (bound)
+		ddf_fun_unbind(fun_a);
 	if (fun_a != NULL)
 		ddf_fun_destroy(fun_a);
 	return rc;

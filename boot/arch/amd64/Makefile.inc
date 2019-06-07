@@ -45,6 +45,7 @@ RD_DRVS_ESSENTIAL += \
 RD_DRVS_NON_ESSENTIAL += \
 	audio/hdaudio \
 	char/ns8250 \
+	char/pc-lpt \
 	time/cmos-rtc \
 	bus/usb/ehci\
 	bus/usb/ohci \
@@ -72,3 +73,4 @@ RD_DATA_NON_ESSENTIAL += \
 POST_OUTPUT = $(ROOT_PATH)/image.iso
 BUILD = Makefile.empty
 POSTBUILD = Makefile.grub
+GRUB_LOADER = multiboot

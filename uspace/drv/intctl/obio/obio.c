@@ -89,9 +89,9 @@ static void obio_connection(ipc_call_t *icall, void *arg)
 
 		async_get_call(&call);
 
-		switch (IPC_GET_IMETHOD(call)) {
+		switch (ipc_get_imethod(&call)) {
 		case IRC_ENABLE_INTERRUPT:
-			inr = IPC_GET_ARG1(call);
+			inr = ipc_get_arg1(&call);
 			pio_set_64(&obio->regs[OBIO_IMR(inr & INO_MASK)],
 			    1UL << 31, 0);
 			async_answer_0(&call, EOK);
@@ -101,7 +101,7 @@ static void obio_connection(ipc_call_t *icall, void *arg)
 			async_answer_0(&call, EOK);
 			break;
 		case IRC_CLEAR_INTERRUPT:
-			inr = IPC_GET_ARG1(call);
+			inr = ipc_get_arg1(&call);
 			pio_write_64(&obio->regs[OBIO_CIR(inr & INO_MASK)], 0);
 			async_answer_0(&call, EOK);
 			break;
@@ -117,6 +117,7 @@ errno_t obio_add(obio_t *obio, obio_res_t *res)
 {
 	ddf_fun_t *fun_a = NULL;
 	errno_t rc;
+	bool bound = false;
 
 	rc = pio_enable((void *)res->base, OBIO_SIZE, (void **) &obio->regs);
 	if (rc != EOK) {
@@ -148,6 +149,8 @@ errno_t obio_add(obio_t *obio, obio_res_t *res)
 
 	return EOK;
 error:
+	if (bound)
+		ddf_fun_unbind(fun_a);
 	if (fun_a != NULL)
 		ddf_fun_destroy(fun_a);
 	return rc;

@@ -178,16 +178,16 @@ static void apic_connection(ipc_call_t *icall, void *arg)
 	while (true) {
 		async_get_call(&call);
 
-		if (!IPC_GET_IMETHOD(call)) {
+		if (!ipc_get_imethod(&call)) {
 			/* The other side has hung up. */
 			async_answer_0(&call, EOK);
 			return;
 		}
 
-		switch (IPC_GET_IMETHOD(call)) {
+		switch (ipc_get_imethod(&call)) {
 		case IRC_ENABLE_INTERRUPT:
 			async_answer_0(&call, apic_enable_irq(apic,
-			    IPC_GET_ARG1(call)));
+			    ipc_get_arg1(&call)));
 			break;
 		case IRC_DISABLE_INTERRUPT:
 			/* XXX TODO */
@@ -211,6 +211,7 @@ errno_t apic_add(apic_t *apic, apic_res_t *res)
 	ddf_fun_t *fun_a = NULL;
 	void *regs;
 	errno_t rc;
+	bool bound = false;
 
 	if ((sysinfo_get_value("apic", &have_apic) != EOK) || (!have_apic)) {
 		printf("%s: No APIC found\n", NAME);
@@ -240,12 +241,16 @@ errno_t apic_add(apic_t *apic, apic_res_t *res)
 		goto error;
 	}
 
+	bound = true;
+
 	rc = ddf_fun_add_to_category(fun_a, "irc");
 	if (rc != EOK)
 		goto error;
 
 	return EOK;
 error:
+	if (bound)
+		ddf_fun_unbind(fun_a);
 	if (fun_a != NULL)
 		ddf_fun_destroy(fun_a);
 	return rc;

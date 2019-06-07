@@ -245,10 +245,13 @@ static void ns8250_write_8(ns8250_regs_t *regs, uint8_t c)
  * @param buf		The output buffer for read data.
  * @param count		The number of bytes to be read.
  * @param nread		Place to store number of bytes actually read
+ * @param flags		@c chardev_f_nonblock not to block waiting for data
+ *			even if no data is available
  *
  * @return		EOK on success or non-zero error code
  */
-static errno_t ns8250_read(chardev_srv_t *srv, void *buf, size_t count, size_t *nread)
+static errno_t ns8250_read(chardev_srv_t *srv, void *buf, size_t count, size_t *nread,
+    chardev_flags_t flags)
 {
 	ns8250_t *ns = srv_ns8250(srv);
 	char *bp = (char *) buf;
@@ -260,7 +263,8 @@ static errno_t ns8250_read(chardev_srv_t *srv, void *buf, size_t count, size_t *
 	}
 
 	fibril_mutex_lock(&ns->mutex);
-	while (buf_is_empty(&ns->input_buffer))
+	while ((flags & chardev_f_none) == 0 &&
+	    buf_is_empty(&ns->input_buffer))
 		fibril_condvar_wait(&ns->input_buffer_available, &ns->mutex);
 	while (!buf_is_empty(&ns->input_buffer) && pos < count) {
 		bp[pos] = (char)buf_pop_front(&ns->input_buffer);
@@ -828,6 +832,7 @@ static errno_t ns8250_dev_add(ddf_dev_t *dev)
 	ddf_fun_t *fun = NULL;
 	bool need_cleanup = false;
 	bool need_unreg_intr_handler = false;
+	bool bound = false;
 	errno_t rc;
 
 	ddf_msg(LVL_DEBUG, "ns8250_dev_add %s (handle = %d)",
@@ -908,15 +913,22 @@ static errno_t ns8250_dev_add(ddf_dev_t *dev)
 		goto fail;
 	}
 
+	bound = true;
 	ns->fun = fun;
 
-	ddf_fun_add_to_category(fun, "serial");
+	rc = ddf_fun_add_to_category(fun, "serial");
+	if (rc != EOK) {
+		ddf_msg(LVL_ERROR, "Error adding function to category 'serial'.");
+		goto fail;
+	}
 
 	ddf_msg(LVL_NOTE, "Device %s successfully initialized.",
 	    ddf_dev_get_name(dev));
 
 	return EOK;
 fail:
+	if (bound)
+		ddf_fun_unbind(fun);
 	if (fun != NULL)
 		ddf_fun_destroy(fun);
 	if (need_unreg_intr_handler)
@@ -1067,7 +1079,7 @@ static errno_t ns8250_set_props(ddf_dev_t *dev, unsigned int baud_rate,
 static void ns8250_default_handler(chardev_srv_t *srv, ipc_call_t *call)
 {
 	ns8250_t *ns8250 = srv_ns8250(srv);
-	sysarg_t method = IPC_GET_IMETHOD(*call);
+	sysarg_t method = ipc_get_imethod(call);
 	errno_t ret;
 	unsigned int baud_rate, parity, word_length, stop_bits;
 
@@ -1080,10 +1092,10 @@ static void ns8250_default_handler(chardev_srv_t *srv, ipc_call_t *call)
 		break;
 
 	case SERIAL_SET_COM_PROPS:
-		baud_rate = IPC_GET_ARG1(*call);
-		parity = IPC_GET_ARG2(*call);
-		word_length = IPC_GET_ARG3(*call);
-		stop_bits = IPC_GET_ARG4(*call);
+		baud_rate = ipc_get_arg1(call);
+		parity = ipc_get_arg2(call);
+		word_length = ipc_get_arg3(call);
+		stop_bits = ipc_get_arg4(call);
 		ret = ns8250_set_props(ns8250->dev, baud_rate, parity, word_length,
 		    stop_bits);
 		async_answer_0(call, ret);
