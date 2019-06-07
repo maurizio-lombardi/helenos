@@ -9,8 +9,6 @@
 #include "Nes_Apu.h"
 #include <assert.h>
 
-using namespace std::hel;
-
 struct vrc6_snapshot_t;
 
 class Nes_Vrc6 {

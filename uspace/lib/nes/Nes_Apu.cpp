@@ -16,8 +16,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA */
 
 #include BLARGG_SOURCE_BEGIN
 
-using namespace std::hel;
-
 Nes_Apu::Nes_Apu()
 {
 	dmc.apu = this;

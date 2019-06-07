@@ -10,8 +10,6 @@
 #include "blargg_common.h"
 #include <assert.h>
 
-using namespace std::hel;
-
 class Blip_Reader;
 
 // Source time unit.
