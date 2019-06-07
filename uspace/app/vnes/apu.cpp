@@ -7,8 +7,6 @@
 #include <Nes_Apu.h>
 #include <apu_snapshot.h>
 
-void* __dso_handle;
-
 namespace APU {
 
 
