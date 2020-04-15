@@ -52,7 +52,7 @@
 
 #define NAME "raspifb"
 
-//#include "mbox.h"
+#include "mbox.h"
 
 ddev_ops_t raspifb_ddev_ops = {
 	.get_gc = NULL,
