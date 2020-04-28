@@ -203,7 +203,8 @@ static void raspberrypi_input_init(void)
 		bcm2835_irc_enable(raspi.irc, BCM2835_UART_IRQ);
 	}
 
-	bcm2835_set_power_device(MBOX_POWER_ID_USB_HCD, true);
+	if (!bcm2835_set_power_device(MBOX_POWER_ID_USB_HCD, true))
+		printf("raspberrypi_input_init: failed to power up USB\n");
 }
 
 size_t raspberrypi_get_irq_count(void)
