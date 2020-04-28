@@ -142,8 +142,8 @@ bool bcm2835_set_power_device(uint32_t device_id, bool on)
 	msg->tag_hdr.buf_size = sizeof(msg->body);
 	msg->tag_hdr.val_len  = sizeof(msg->body);
 	msg->body.device_id   = device_id;
-	msg->body.state       = on ? MBOX_POWER_DEVICE_ON :
-				MBOX_POWER_DEVICE_OFF;
+	msg->body.state       = (on ? MBOX_POWER_DEVICE_ON :
+				MBOX_POWER_DEVICE_OFF) | MBOX_POWER_DEVICE_WAIT;
 	msg->zero = 0;
 
 	mbox_write(mbox,
