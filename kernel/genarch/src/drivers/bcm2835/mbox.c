@@ -60,12 +60,7 @@ static uint32_t mbox_read(bcm2835_mbox_t *mbox, uint8_t chan)
 bool bcm2835_prop_get_memory(uint32_t *base, uint32_t *size)
 {
 	bool ret;
-	bcm2835_mbox_t *mbox;
 	MBOX_BUFF_ALLOC(req, mbox_getmem_buf_t);
-
-	mbox = (void *) km_map(BCM2835_MBOX0_ADDR, sizeof(bcm2835_mbox_t),
-	    KM_NATURAL_ALIGNMENT, PAGE_NOT_CACHEABLE);
-	assert(mbox);
 
 	req->buf_hdr.size = sizeof(mbox_getmem_buf_t);
 	req->buf_hdr.code = MBOX_PROP_CODE_REQ;
@@ -74,9 +69,10 @@ bool bcm2835_prop_get_memory(uint32_t *base, uint32_t *size)
 	req->tag_hdr.val_len = 0;
 	req->zero = 0;
 
-	mbox_write(mbox,
+	mbox_write((bcm2835_mbox_t *)BCM2835_MBOX0_ADDR,
 	    MBOX_CHAN_PROP_A2V, KA2VCA((uint32_t)req));
-	mbox_read(mbox, MBOX_CHAN_PROP_A2V);
+	mbox_read((bcm2835_mbox_t *)BCM2835_MBOX0_ADDR,
+		MBOX_CHAN_PROP_A2V);
 
 	if (req->buf_hdr.code == MBOX_PROP_CODE_RESP_OK) {
 		*base = req->data.base;
@@ -86,7 +82,6 @@ bool bcm2835_prop_get_memory(uint32_t *base, uint32_t *size)
 		ret = false;
 	}
 
-	km_unmap((uintptr_t)mbox, sizeof(bcm2835_mbox_t));
 	return ret;
 }
 
